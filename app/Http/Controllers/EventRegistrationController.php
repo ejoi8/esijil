@@ -123,14 +123,11 @@ class EventRegistrationController extends Controller
                 $participant->restore();
             }
 
-            $participant->fill($request->participantData());
-            $participant->save();
-
-            return $participant;
+            return $this->saveParticipant($participant, $request);
         }
 
         try {
-            return Participant::query()->create($request->participantData());
+            return $this->saveParticipant(new Participant, $request);
         } catch (QueryException $exception) {
             if (! $this->isUniqueConstraintViolation($exception)) {
                 throw $exception;
@@ -144,11 +141,23 @@ class EventRegistrationController extends Controller
                 $participant->restore();
             }
 
-            $participant->fill($request->participantData());
-            $participant->save();
-
-            return $participant;
+            return $this->saveParticipant($participant, $request);
         }
+    }
+
+    protected function saveParticipant(Participant $participant, StoreEventRegistrationRequest $request): Participant
+    {
+        $participant->fill($request->participantData());
+
+        // Merge (not replace) so admin-only detail fields survive re-registration.
+        $details = $request->publicDetails();
+        if ($details !== []) {
+            $participant->details = array_merge($participant->details ?? [], $details);
+        }
+
+        $participant->save();
+
+        return $participant;
     }
 
     protected function resolveRegistration(Event $event, Participant $participant): Registration

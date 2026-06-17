@@ -20,6 +20,7 @@ use Illuminate\Notifications\Notifiable;
     'branch_id',
     'membership_status',
     'membership_notes',
+    'details',
 ])]
 class Participant extends Model
 {
@@ -30,6 +31,7 @@ class Participant extends Model
     {
         return [
             'membership_status' => MembershipStatus::class,
+            'details' => 'array',
         ];
     }
 

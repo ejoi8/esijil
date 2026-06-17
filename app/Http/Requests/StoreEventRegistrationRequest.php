@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\MembershipStatus;
+use App\Fields\ParticipantFields;
 use App\Http\Requests\Concerns\NormalizesNokp;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -21,14 +22,35 @@ class StoreEventRegistrationRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        return array_merge([
             'full_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'nokp' => $this->nokpRules(),
             'phone' => ['nullable', 'string', 'max:50'],
             'membership_status' => ['required', Rule::in(MembershipStatus::values())],
             'membership_notes' => ['nullable', 'string', 'max:1000'],
-        ];
+        ], ParticipantFields::rules('public'));
+    }
+
+    /**
+     * Submitted values for the public flexible fields (config/participant_fields.php),
+     * limited to defined public keys so arbitrary keys can't be injected.
+     *
+     * @return array<string, mixed>
+     */
+    public function publicDetails(): array
+    {
+        $details = [];
+
+        foreach (array_keys(ParticipantFields::publicFields()) as $key) {
+            $value = $this->input("details.{$key}");
+
+            if ($value !== null && $value !== '') {
+                $details[$key] = $value;
+            }
+        }
+
+        return $details;
     }
 
     /**

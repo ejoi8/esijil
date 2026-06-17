@@ -4,6 +4,7 @@ namespace App\Services\Certificates;
 
 use App\Enums\CertificatePdfRenderer;
 use App\Enums\CertificateType;
+use App\Fields\ParticipantFields;
 use App\Models\CertificateTemplate;
 use App\Models\Registration;
 use App\Settings\CertificateSettings;
@@ -84,7 +85,16 @@ class PdfmeCertificateRenderer
         $participant = $registration->participant;
         $templateSchema = $this->resolveCurrentTemplateSchema($registration);
 
-        return [
+        // Flexible participant fields that opt in via a `cert_var`. Merged first
+        // so core variables (participant_name, etc.) can never be overridden.
+        $detailVariables = [];
+        foreach (ParticipantFields::all() as $key => $field) {
+            if (! empty($field['cert_var'])) {
+                $detailVariables[$field['cert_var']] = ParticipantFields::display($key, data_get($participant->details, $key));
+            }
+        }
+
+        return array_merge($detailVariables, [
             'participant_name' => (string) $participant->full_name,
             'participant_nokp' => (string) $participant->nokp,
             'event_title' => (string) $event->title,
@@ -98,7 +108,7 @@ class PdfmeCertificateRenderer
             'certificate_type' => CertificateType::fromMixed($registration->certificate_type)?->value ?? (string) $registration->certificate_type,
             'signature_name' => (string) ($templateSchema['signature_name'] ?? ''),
             'signature_title' => (string) ($templateSchema['signature_title'] ?? ''),
-        ];
+        ]);
     }
 
     /**

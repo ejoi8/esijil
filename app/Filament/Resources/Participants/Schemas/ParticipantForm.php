@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Participants\Schemas;
 
 use App\Enums\MembershipStatus;
+use App\Fields\ParticipantFields;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -42,9 +44,35 @@ class ParticipantForm
                             ->required(),
                         Textarea::make('membership_notes')
                             ->columnSpanFull(),
+                        ...self::detailComponents(),
                     ])
                     ->columnSpanFull()
                     ->columns(2),
             ]);
+    }
+
+    /**
+     * Form components for the flexible fields in config/participant_fields.php.
+     *
+     * @return array<int, Field>
+     */
+    protected static function detailComponents(): array
+    {
+        $components = [];
+
+        foreach (ParticipantFields::all() as $key => $field) {
+            $name = "details.{$key}";
+            $label = $field['label'] ?? str($key)->headline()->toString();
+
+            $component = match ($field['type'] ?? 'text') {
+                'textarea' => Textarea::make($name)->columnSpanFull(),
+                'select' => Select::make($name)->options($field['options'] ?? []),
+                default => TextInput::make($name),
+            };
+
+            $components[] = $component->label($label)->required($field['required'] ?? false);
+        }
+
+        return $components;
     }
 }

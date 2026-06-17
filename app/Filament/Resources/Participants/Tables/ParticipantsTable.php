@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Participants\Tables;
 
 use App\Enums\MembershipStatus;
+use App\Fields\ParticipantFields;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -40,6 +41,7 @@ class ParticipantsTable
                     ->badge()
                     ->formatStateUsing(fn (mixed $state): string => MembershipStatus::labelFor($state))
                     ->searchable(),
+                ...self::detailColumns(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -71,5 +73,24 @@ class ParticipantsTable
                     RestoreBulkAction::make(),
                 ]),
             ]);
+    }
+
+    /**
+     * Toggleable columns for the flexible fields in config/participant_fields.php.
+     *
+     * @return array<int, TextColumn>
+     */
+    protected static function detailColumns(): array
+    {
+        $columns = [];
+
+        foreach (ParticipantFields::all() as $key => $field) {
+            $columns[] = TextColumn::make("details.{$key}")
+                ->label($field['label'] ?? str($key)->headline()->toString())
+                ->formatStateUsing(fn (mixed $state): string => ParticipantFields::display($key, $state))
+                ->toggleable(isToggledHiddenByDefault: true);
+        }
+
+        return $columns;
     }
 }

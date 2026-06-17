@@ -137,6 +137,36 @@
                         </div>
                     </div>
 
+                    @foreach (\App\Fields\ParticipantFields::publicFields() as $detailKey => $detailField)
+                        @php
+                            $detailValue = old("details.{$detailKey}");
+                            $detailType = $detailField['type'] ?? 'text';
+                            $detailRequired = $detailField['required'] ?? false;
+                            $detailLabel = $detailField['label'] ?? \Illuminate\Support\Str::headline($detailKey);
+                        @endphp
+                        <div class="field">
+                            <label class="label" for="detail_{{ $detailKey }}">{{ $detailLabel }}</label>
+                            @if ($detailType === 'select')
+                                <div class="selectwrap">
+                                    <select id="detail_{{ $detailKey }}" name="details[{{ $detailKey }}]" class="select" @required($detailRequired)>
+                                        <option value="">—</option>
+                                        @foreach (($detailField['options'] ?? []) as $optionValue => $optionLabel)
+                                            <option value="{{ $optionValue }}" @selected((string) $detailValue === (string) $optionValue)>{{ $optionLabel }}</option>
+                                        @endforeach
+                                    </select>
+                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+                            @elseif ($detailType === 'textarea')
+                                <textarea id="detail_{{ $detailKey }}" name="details[{{ $detailKey }}]" class="input" rows="3" @required($detailRequired)>{{ $detailValue }}</textarea>
+                            @else
+                                <input id="detail_{{ $detailKey }}" name="details[{{ $detailKey }}]" type="text" class="input" value="{{ $detailValue }}" @required($detailRequired)>
+                            @endif
+                            @error("details.{$detailKey}")<p class="err">{{ $message }}</p>@enderror
+                        </div>
+                    @endforeach
+
                     <div class="formfoot">
                         <p class="hint">Tekan hantar sekali sahaja. Jika rekod telah wujud, mesej status akan dipaparkan.</p>
                         <button type="submit" class="btn btn-solid" @disabled(! $registrationIsOpen) data-submit-button>

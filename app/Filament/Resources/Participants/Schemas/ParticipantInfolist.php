@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Participants\Schemas;
 
+use App\Fields\ParticipantFields;
 use App\Models\Participant;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -28,6 +29,7 @@ class ParticipantInfolist
                 TextEntry::make('membership_notes')
                     ->placeholder('-')
                     ->columnSpanFull(),
+                ...self::detailEntries(),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),
@@ -38,5 +40,24 @@ class ParticipantInfolist
                     ->dateTime()
                     ->visible(fn (Participant $record): bool => $record->trashed()),
             ]);
+    }
+
+    /**
+     * Infolist entries for the flexible fields in config/participant_fields.php.
+     *
+     * @return array<int, TextEntry>
+     */
+    protected static function detailEntries(): array
+    {
+        $entries = [];
+
+        foreach (ParticipantFields::all() as $key => $field) {
+            $entries[] = TextEntry::make("details.{$key}")
+                ->label($field['label'] ?? str($key)->headline()->toString())
+                ->formatStateUsing(fn (mixed $state): string => ParticipantFields::display($key, $state))
+                ->placeholder('-');
+        }
+
+        return $entries;
     }
 }
