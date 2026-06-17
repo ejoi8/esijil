@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Participants\Schemas;
 
+use App\Enums\MembershipStatus;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -37,10 +38,7 @@ class ParticipantForm
                             ->searchable()
                             ->preload(),
                         Select::make('membership_status')
-                            ->options([
-                                'member' => 'Member',
-                                'non_member' => 'Non-member',
-                            ])
+                            ->options(MembershipStatus::options())
                             ->required(),
                         Textarea::make('membership_notes')
                             ->columnSpanFull(),

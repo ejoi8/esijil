@@ -44,9 +44,13 @@ class CertificateTemplatesTable
                     ->dateTime('d M Y H:i')
                     ->sortable(),
             ])
+            ->defaultSort('name')
             ->filters([
                 TrashedFilter::make(),
             ])
+            // This resource uses the full-page Designer as its record screen
+            // (instead of a View/Edit page), so the row actions below
+            // intentionally diverge from the View→Edit convention.
             ->recordUrl(fn ($record): string => CertificateTemplateResource::getUrl('designer', ['record' => $record]))
             ->recordActions([
                 ReplicateAction::make('duplicate')

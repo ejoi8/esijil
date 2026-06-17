@@ -6,6 +6,7 @@ use App\Enums\CertificateType;
 use App\Enums\EventStatus;
 use App\Models\CertificateTemplate;
 use App\Models\Event;
+use App\Support\QrCode;
 use Closure;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -198,6 +199,8 @@ class EventForm
 
     protected static function registrationQrCodeUrl(Event $event): string
     {
-        return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='.rawurlencode($event->publicRegistrationUrl());
+        // Generated locally so the signed registration URL (which carries an
+        // HMAC signature) is never sent to a third-party QR service.
+        return QrCode::dataUri($event->publicRegistrationUrl());
     }
 }

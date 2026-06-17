@@ -14,6 +14,7 @@ Route::post('/semakan', [CertificateLookupController::class, 'search'])
     ->name('certificate-lookup.search');
 Route::get('/semakan/keputusan', [CertificateLookupController::class, 'result'])->name('certificate-lookup.result');
 Route::get('/certificates/{registration}/download', [CertificateLookupController::class, 'download'])
+    ->middleware('throttle:certificate-download')
     ->name('certificate-lookup.download');
 
 Route::middleware('signed')->group(function (): void {
@@ -48,7 +49,7 @@ if (app()->environment('local')) {
         Auth::login($user);
         session()->regenerate();
 
-        return redirect("/auth/profile#{$user->id}");
+        return redirect('/auth');
     });
 
     Route::get('/dev-logout', function () {

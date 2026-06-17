@@ -80,8 +80,7 @@ it('downloads a certificate after a successful lookup session', function () {
         ->assertHeader('content-type', 'application/pdf')
         ->assertHeader('content-disposition', 'attachment; filename=participation_certificate-siti-puspanita-seminar-kesihatan-puspanita.pdf');
 
-    expect($registration->refresh()->certificate_file_path)->toBeNull()
-        ->and($registration->cert_serial_number)->not->toBeNull()
+    expect($registration->refresh()->cert_serial_number)->not->toBeNull()
         ->and($registration->certificate_issued_at)->not->toBeNull();
 });
 

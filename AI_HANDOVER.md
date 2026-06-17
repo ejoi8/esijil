@@ -13,7 +13,7 @@ eSIJIL is a Laravel 13 + Filament 5 application for:
 
 Admin UI lives at `/auth`.
 
-Public flows live in [routes/web.php](/mnt/c/laragon/www/esijil/routes/web.php).
+Public flows live in [routes/web.php](routes/web.php).
 
 ## The Most Important Domain Fact
 
@@ -28,11 +28,11 @@ Current state:
 
 If you change certificate behavior, start with:
 
-- [Registration.php](/mnt/c/laragon/www/esijil/app/Models/Registration.php)
-- [2026_04_26_065610_merge_certificates_into_registrations_table.php](/mnt/c/laragon/www/esijil/database/migrations/2026_04_26_065610_merge_certificates_into_registrations_table.php)
-- [RegistrationCertificateIssuer.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/RegistrationCertificateIssuer.php)
-- [StoredCertificatePdf.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/StoredCertificatePdf.php)
-- [PdfmeCertificateRenderer.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/PdfmeCertificateRenderer.php)
+- [Registration.php](app/Models/Registration.php)
+- [2026_04_26_065610_merge_certificates_into_registrations_table.php](database/migrations/2026_04_26_065610_merge_certificates_into_registrations_table.php)
+- [RegistrationCertificateIssuer.php](app/Services/Certificates/RegistrationCertificateIssuer.php)
+- [StoredCertificatePdf.php](app/Services/Certificates/StoredCertificatePdf.php)
+- [PdfmeCertificateRenderer.php](app/Services/Certificates/PdfmeCertificateRenderer.php)
 
 ## Current Mental Model
 
@@ -47,7 +47,7 @@ If you change certificate behavior, start with:
 
 ### Certificate lookup
 
-Handled by [CertificateLookupController.php](/mnt/c/laragon/www/esijil/app/Http/Controllers/CertificateLookupController.php).
+Handled by [CertificateLookupController.php](app/Http/Controllers/CertificateLookupController.php).
 
 Key facts:
 
@@ -59,7 +59,7 @@ Key facts:
 
 ### Event registration
 
-Handled by [EventRegistrationController.php](/mnt/c/laragon/www/esijil/app/Http/Controllers/EventRegistrationController.php).
+Handled by [EventRegistrationController.php](app/Http/Controllers/EventRegistrationController.php).
 
 Key facts:
 
@@ -77,32 +77,30 @@ Certificate templates are designed with pdfme in the browser, but downloads are 
 
 Important files:
 
-- [config/certificates.php](/mnt/c/laragon/www/esijil/config/certificates.php)
-- [resources/js/certificate-template-designer.js](/mnt/c/laragon/www/esijil/resources/js/certificate-template-designer.js)
-- [app/Services/Certificates/PdfmeCertificateRenderer.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/PdfmeCertificateRenderer.php)
-- [resources/views/certificates/pdfme-dompdf.blade.php](/mnt/c/laragon/www/esijil/resources/views/certificates/pdfme-dompdf.blade.php)
-- [public/fonts/certificates](/mnt/c/laragon/www/esijil/public/fonts/certificates)
+- [config/certificates.php](config/certificates.php)
+- [resources/js/certificate-template-designer.js](resources/js/certificate-template-designer.js)
+- [app/Services/Certificates/PdfmeCertificateRenderer.php](app/Services/Certificates/PdfmeCertificateRenderer.php)
+- [resources/views/certificates/pdfme-dompdf.blade.php](resources/views/certificates/pdfme-dompdf.blade.php)
+- [public/fonts/certificates](public/fonts/certificates)
 
 Important behavior:
 
-- `certificate_template_snapshot` is persisted on the registration
-- `certificate_metadata.template_schema_snapshot` preserves schema context
-- renderer may sync the snapshot to the current template depending on `certificate_template_update_mode`
 - downloads render from the current registration record
+- templates are resolved **live** from the linked `CertificateTemplate` — there is no stored snapshot (the `certificate_template_snapshot` / `certificate_template_update_mode` columns were dropped), so editing a template retroactively changes already-issued certificates. This is intentional.
 - preview and downloaded PDF can still differ slightly because `@pdfme/ui` and DomPDF do not measure text exactly the same way
 - image fields are explicitly fitted in the server renderer to preserve pdfme-style aspect ratio handling more closely
 
 If you change template behavior, inspect:
 
-- [CertificateTemplate.php](/mnt/c/laragon/www/esijil/app/Models/CertificateTemplate.php)
-- [CertificateTemplateSeeder.php](/mnt/c/laragon/www/esijil/database/seeders/CertificateTemplateSeeder.php)
-- [Designer.php](/mnt/c/laragon/www/esijil/app/Filament/Resources/CertificateTemplates/Pages/Designer.php)
-- [PdfmeTemplateFactory.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/PdfmeTemplateFactory.php)
-- [PdfmeTemplateLegacyAssetInliner.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/PdfmeTemplateLegacyAssetInliner.php)
+- [CertificateTemplate.php](app/Models/CertificateTemplate.php)
+- [CertificateTemplateSeeder.php](database/seeders/CertificateTemplateSeeder.php)
+- [Designer.php](app/Filament/Resources/CertificateTemplates/Pages/Designer.php)
+- [PdfmeTemplateFactory.php](app/Services/Certificates/PdfmeTemplateFactory.php)
+- [PdfmeTemplateLegacyAssetInliner.php](app/Services/Certificates/PdfmeTemplateLegacyAssetInliner.php)
 
 ## Admin Surface
 
-The Filament panel is configured in [AuthPanelProvider.php](/mnt/c/laragon/www/esijil/app/Providers/Filament/AuthPanelProvider.php).
+The Filament panel is configured in [AuthPanelProvider.php](app/Providers/Filament/AuthPanelProvider.php).
 
 Current resources:
 
@@ -114,11 +112,22 @@ Current resources:
 
 There is no standalone certificate resource.
 
+### Authorization
+
+Access is role-based (spatie/laravel-permission):
+
+- `/auth` requires the `admin` or `staff` role (`User::canAccessPanel`).
+- Resources are gated by `App\Policies\*` mapping abilities to `{resource}.{view|create|update|delete|forceDelete}` permissions.
+- The `admin` role is a super-admin and bypasses every policy via `Gate::before` (see `AppServiceProvider`).
+- `staff` may operate on branches, participants, events, registrations and certificate templates — but not Users, Application Settings, or Email Logs.
+- Roles/permissions are seeded by `RolesAndPermissionsSeeder`; `admin@admin.com` is assigned `admin`.
+- The last `admin` user cannot be deleted (guarded in the `User` model).
+
 Useful resource areas:
 
-- [app/Filament/Resources/Events](/mnt/c/laragon/www/esijil/app/Filament/Resources/Events)
-- [app/Filament/Resources/Registrations](/mnt/c/laragon/www/esijil/app/Filament/Resources/Registrations)
-- [app/Filament/Resources/CertificateTemplates](/mnt/c/laragon/www/esijil/app/Filament/Resources/CertificateTemplates)
+- [app/Filament/Resources/Events](app/Filament/Resources/Events)
+- [app/Filament/Resources/Registrations](app/Filament/Resources/Registrations)
+- [app/Filament/Resources/CertificateTemplates](app/Filament/Resources/CertificateTemplates)
 
 ## Seeded Defaults
 
@@ -142,11 +151,11 @@ When changing behavior, read the matching test first.
 
 Primary feature tests:
 
-- [CertificateLookupTest.php](/mnt/c/laragon/www/esijil/tests/Feature/CertificateLookupTest.php)
-- [EventRegistrationTest.php](/mnt/c/laragon/www/esijil/tests/Feature/EventRegistrationTest.php)
-- [EventResourceTest.php](/mnt/c/laragon/www/esijil/tests/Feature/EventResourceTest.php)
-- [CertificateTemplateManagementTest.php](/mnt/c/laragon/www/esijil/tests/Feature/CertificateTemplateManagementTest.php)
-- [DomainConsistencyTest.php](/mnt/c/laragon/www/esijil/tests/Feature/DomainConsistencyTest.php)
+- [CertificateLookupTest.php](tests/Feature/CertificateLookupTest.php)
+- [EventRegistrationTest.php](tests/Feature/EventRegistrationTest.php)
+- [EventResourceTest.php](tests/Feature/EventResourceTest.php)
+- [CertificateTemplateManagementTest.php](tests/Feature/CertificateTemplateManagementTest.php)
+- [DomainConsistencyTest.php](tests/Feature/DomainConsistencyTest.php)
 
 What they protect:
 
@@ -188,6 +197,7 @@ vendor/bin/pint --dirty --format agent
 - Do not document or code against a `CertificateResource`; it does not exist in the current app.
 - Do not assume event registration is public-listable; there is no public `/events` index.
 - Do not bypass `nokp` normalization rules in the request classes.
-- Do not assume Node is required for certificate downloads; it is only needed for frontend asset builds and the designer UI.
-- Do not ignore `certificate_template_update_mode` when changing rendering logic.
+- Do not assume Node is required for certificate downloads; the default DomPDF renderer needs no Node. Only the optional `pdfme` renderer (toggled in Application Settings) shells out to Node.
+- Do not reintroduce a template snapshot or `certificate_template_update_mode`; templates resolve live by design (those columns were dropped).
 - Do not change public route semantics without updating the session-based authorization checks and tests.
+- Do not give panel access without a role: `/auth` requires the `admin` or `staff` role, resources are gated by policies, and the `admin` role bypasses all policies via `Gate::before`. Settings and Email Logs are admin-only.

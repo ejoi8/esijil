@@ -3,6 +3,7 @@ name: Tests
 on:
   push:
     branches:
+      - main
       - master
       - '*.x'
   pull_request:
@@ -42,6 +43,9 @@ jobs:
 
       - name: Generate app key
         run: php artisan key:generate
+
+      - name: Check code style (Pint)
+        run: vendor/bin/pint --test
 
       - name: Execute tests
         run: php artisan test

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Registrations\Schemas;
 
+use App\Enums\AttendanceStatus;
+use App\Enums\RegistrationSource;
 use App\Models\Participant;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -31,20 +33,12 @@ class RegistrationForm
                         DateTimePicker::make('registered_at')
                             ->required(),
                         Select::make('attendance_status')
-                            ->options([
-                                'registered' => 'Registered',
-                                'attended' => 'Attended',
-                                'no_show' => 'No-show',
-                            ])
+                            ->options(AttendanceStatus::options())
                             ->required(),
                         DateTimePicker::make('checked_in_at'),
                         DateTimePicker::make('completed_at'),
                         Select::make('source')
-                            ->options([
-                                'legacy_import' => 'Legacy Import',
-                                'public_form' => 'Public Form',
-                                'admin' => 'Admin',
-                            ])
+                            ->options(RegistrationSource::options())
                             ->required(),
                         Textarea::make('remarks')
                             ->columnSpanFull(),

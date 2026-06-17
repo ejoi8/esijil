@@ -37,14 +37,23 @@ class Designer extends Page
      */
     public array $defaultTemplateData = [];
 
+    public static function canAccess(array $parameters = []): bool
+    {
+        return auth()->user()?->can('certificateTemplate.update') ?? false;
+    }
+
     public function mount(int|string $record): void
     {
+        abort_unless(static::canAccess(), 403);
+
         $this->record = $this->resolveRecord($record);
         $this->refreshTemplateData();
     }
 
     public function saveDesigner(string $template): void
     {
+        abort_unless(auth()->user()?->can('certificateTemplate.update') ?? false, 403);
+
         try {
             $decodedTemplate = json_decode($template, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {

@@ -2,8 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\CertificateType;
 use App\Enums\EventStatus;
+use App\Enums\MembershipStatus;
+use App\Enums\RegistrationSource;
 use App\Models\Branch;
 use App\Models\Event;
 use App\Models\Participant;
@@ -251,10 +254,10 @@ class LegacyEsijilSeeder extends Seeder
             'event_id' => $eventId,
             'participant_id' => $participantId,
             'registered_at' => $this->parseLegacyDateTime($legacyRegistration->create_at) ?? now(),
-            'attendance_status' => 'registered',
+            'attendance_status' => AttendanceStatus::Registered->value,
             'checked_in_at' => null,
             'completed_at' => null,
-            'source' => 'legacy_import',
+            'source' => RegistrationSource::LegacyImport->value,
             'remarks' => $this->buildRegistrationRemarks($legacyRegistration),
         ]);
         $registration->forceFill($this->certificateAttributes($registration, $eventDocumentData, $legacyRegistrationId, $legacyEventId));
@@ -303,8 +306,8 @@ class LegacyEsijilSeeder extends Seeder
     {
         return [
             'registered_at' => $this->parseLegacyDateTime($legacyRegistration->create_at) ?? $registration->registered_at ?? now(),
-            'attendance_status' => 'registered',
-            'source' => 'legacy_import',
+            'attendance_status' => AttendanceStatus::Registered->value,
+            'source' => RegistrationSource::LegacyImport->value,
             'remarks' => $this->mergeRemarks($registration->remarks, $this->buildRegistrationRemarks($legacyRegistration)),
         ];
     }
@@ -319,8 +322,8 @@ class LegacyEsijilSeeder extends Seeder
                 $registration->registered_at,
                 $this->parseLegacyDateTime($legacyRegistration->create_at),
             ) ?? $registration->registered_at ?? now(),
-            'attendance_status' => 'registered',
-            'source' => 'legacy_import',
+            'attendance_status' => AttendanceStatus::Registered->value,
+            'source' => RegistrationSource::LegacyImport->value,
             'remarks' => $this->mergeRemarks($registration->remarks, $this->buildRegistrationRemarks($legacyRegistration)),
         ];
     }
@@ -343,10 +346,9 @@ class LegacyEsijilSeeder extends Seeder
             'certificate_type' => $eventDocumentData['certificate_type'],
             'certificate_template_key' => $eventDocumentData['template_key'],
             'cert_serial_number' => $registration->cert_serial_number,
-            'certificate_file_path' => null,
             'certificate_issued_at' => null,
             'certificate_metadata' => [
-                'source' => 'legacy_import',
+                'source' => RegistrationSource::LegacyImport->value,
                 'legacy_registration_id' => $legacyRegistrationId,
                 'legacy_event_id' => $legacyEventId,
             ],
@@ -386,7 +388,9 @@ class LegacyEsijilSeeder extends Seeder
     {
         $normalizedStatus = $this->normalizeKey($status);
 
-        return $normalizedStatus === 'ahli puspanita' ? 'member' : 'non_member';
+        return $normalizedStatus === 'ahli puspanita'
+            ? MembershipStatus::Member->value
+            : MembershipStatus::NonMember->value;
     }
 
     protected function buildRegistrationRemarks(object $legacyRegistration): ?string

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Participants\Tables;
 
+use App\Enums\MembershipStatus;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -37,7 +38,7 @@ class ParticipantsTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('membership_status')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => str($state)->replace('_', ' ')->title())
+                    ->formatStateUsing(fn (mixed $state): string => MembershipStatus::labelFor($state))
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -56,10 +57,7 @@ class ParticipantsTable
             ->filters([
                 SelectFilter::make('membership_status')
                     ->label('Membership Status')
-                    ->options([
-                        'member' => 'Member',
-                        'non_member' => 'Non Member',
-                    ]),
+                    ->options(MembershipStatus::options()),
                 TrashedFilter::make(),
             ])
             ->recordActions([

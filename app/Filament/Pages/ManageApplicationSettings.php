@@ -12,6 +12,7 @@ use App\Settings\MailSettings;
 use App\Settings\NotificationSettings;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -44,6 +45,11 @@ class ManageApplicationSettings extends SettingsPage
     protected static ?int $navigationSort = 1;
 
     protected static string $settings = MailSettings::class;
+
+    public static function canAccess(): bool
+    {
+        return Filament::auth()->user()?->can('settings.manage') ?? false;
+    }
 
     public function form(Schema $schema): Schema
     {

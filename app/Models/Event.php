@@ -72,7 +72,7 @@ class Event extends Model
 
     public function registrationLinkExpiresAt(): Carbon
     {
-        return ($this->ends_at ?? $this->starts_at)->copy()->addDay();
+        return ($this->ends_at ?? $this->starts_at ?? now())->copy()->addDay();
     }
 
     public function publicRegistrationUrl(): string

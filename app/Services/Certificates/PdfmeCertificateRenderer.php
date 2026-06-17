@@ -32,7 +32,7 @@ class PdfmeCertificateRenderer
 
     public function render(Registration $registration): string
     {
-        $registration->load('certificateTemplate', 'event.certificateTemplate', 'participant');
+        $registration->loadMissing('certificateTemplate', 'event.certificateTemplate', 'participant');
         $this->ensureCertificateSerialNumber($registration);
 
         $template = $this->resolveTemplate($registration);
@@ -672,7 +672,7 @@ class PdfmeCertificateRenderer
 
     protected function currentCertificateTemplateForRegistration(Registration $registration): ?CertificateTemplate
     {
-        $registration->load('certificateTemplate', 'event.certificateTemplate');
+        $registration->loadMissing('certificateTemplate', 'event.certificateTemplate');
 
         return $registration->event?->certificateTemplate ?? $registration->certificateTemplate;
     }

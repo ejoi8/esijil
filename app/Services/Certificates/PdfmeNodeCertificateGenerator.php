@@ -2,7 +2,7 @@
 
 namespace App\Services\Certificates;
 
-use RuntimeException;
+use App\Exceptions\CertificateRenderingException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
@@ -42,13 +42,13 @@ class PdfmeNodeCertificateGenerator
                 $message .= ' '.$errorOutput;
             }
 
-            throw new RuntimeException($message, previous: $exception);
+            throw CertificateRenderingException::fromGenerator($message, $exception);
         }
 
         $pdf = base64_decode(trim($process->getOutput()), true);
 
         if ($pdf === false) {
-            throw new RuntimeException('Unable to decode the generated pdfme certificate output.');
+            throw CertificateRenderingException::fromGenerator('Unable to decode the generated pdfme certificate output.');
         }
 
         return $pdf;

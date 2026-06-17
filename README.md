@@ -7,7 +7,7 @@ The app has two main surfaces:
 - a Filament admin panel at `/auth`
 - a public surface for certificate lookup and signed event registration
 
-See [AI_HANDOVER.md](/mnt/c/laragon/www/esijil/AI_HANDOVER.md) for a compact project brief aimed at future AI agents.
+See [AI_HANDOVER.md](AI_HANDOVER.md) for a compact project brief aimed at future AI agents.
 
 ## Current Scope
 
@@ -43,7 +43,7 @@ The current application supports:
 
 ### Admin panel
 
-The admin panel is defined by [AuthPanelProvider.php](/mnt/c/laragon/www/esijil/app/Providers/Filament/AuthPanelProvider.php) and lives at `/auth`.
+The admin panel is defined by [AuthPanelProvider.php](app/Providers/Filament/AuthPanelProvider.php) and lives at `/auth`.
 
 Current resources:
 
@@ -68,7 +68,7 @@ Settings pages and plugin resources:
 
 ### Public routes
 
-Public routes live in [routes/web.php](/mnt/c/laragon/www/esijil/routes/web.php).
+Public routes live in [routes/web.php](routes/web.php).
 
 Current public flows:
 
@@ -103,19 +103,17 @@ Certificate-related columns currently stored on `registrations` include:
 - `certificate_type`
 - `certificate_template_id`
 - `certificate_template_key`
-- `certificate_template_snapshot`
 - `cert_serial_number`
-- `certificate_file_path`
 - `certificate_issued_at`
 - `certificate_metadata`
 
-The merge from the older separate certificate table is captured in [2026_04_26_065610_merge_certificates_into_registrations_table.php](/mnt/c/laragon/www/esijil/database/migrations/2026_04_26_065610_merge_certificates_into_registrations_table.php).
+The merge from the older separate certificate table is captured in [2026_04_26_065610_merge_certificates_into_registrations_table.php](database/migrations/2026_04_26_065610_merge_certificates_into_registrations_table.php).
 
 ## Business Rules
 
 ### Certificate types
 
-The app supports two certificate types via [CertificateType.php](/mnt/c/laragon/www/esijil/app/Enums/CertificateType.php):
+The app supports two certificate types via [CertificateType.php](app/Enums/CertificateType.php):
 
 - `participation_certificate`
 - `attendance_slip`
@@ -147,7 +145,7 @@ Public event registration requires:
 
 ### Lookup throttling
 
-Certificate lookup POST requests are throttled in [AppServiceProvider.php](/mnt/c/laragon/www/esijil/app/Providers/AppServiceProvider.php):
+Certificate lookup POST requests are throttled in [AppServiceProvider.php](app/Providers/AppServiceProvider.php):
 
 - `5` requests per minute
 - keyed by `ip + sha1(nokp)`
@@ -156,8 +154,8 @@ Certificate lookup POST requests are throttled in [AppServiceProvider.php](/mnt/
 
 Public lookup and registration normalize `nokp` to digits only in:
 
-- [LookupCertificateRequest.php](/mnt/c/laragon/www/esijil/app/Http/Requests/LookupCertificateRequest.php)
-- [StoreEventRegistrationRequest.php](/mnt/c/laragon/www/esijil/app/Http/Requests/StoreEventRegistrationRequest.php)
+- [LookupCertificateRequest.php](app/Http/Requests/LookupCertificateRequest.php)
+- [StoreEventRegistrationRequest.php](app/Http/Requests/StoreEventRegistrationRequest.php)
 
 ## Application Settings And Mail
 
@@ -165,8 +163,8 @@ Application-wide settings are managed in the Filament admin panel under `Setting
 
 Settings are stored with Spatie Laravel Settings:
 
-- [MailSettings.php](/mnt/c/laragon/www/esijil/app/Settings/MailSettings.php) stores the default mailer, SMTP server, credentials, and global sender address.
-- [NotificationSettings.php](/mnt/c/laragon/www/esijil/app/Settings/NotificationSettings.php) stores notification feature toggles.
+- [MailSettings.php](app/Settings/MailSettings.php) stores the default mailer, SMTP server, credentials, and global sender address.
+- [NotificationSettings.php](app/Settings/NotificationSettings.php) stores notification feature toggles.
 
 The page currently has these tabs:
 
@@ -179,11 +177,11 @@ Current notification controls:
 - `Send registration confirmation` controls whether a participant receives a confirmation email after a new public registration.
 - Manual `Send test notification` remains available for admins even when the live registration confirmation toggle is disabled.
 
-Runtime mail configuration is applied by [MailSettingsConfigurator.php](/mnt/c/laragon/www/esijil/app/Services/Mail/MailSettingsConfigurator.php) during application boot and before test email actions.
+Runtime mail configuration is applied by [MailSettingsConfigurator.php](app/Services/Mail/MailSettingsConfigurator.php) during application boot and before test email actions.
 
 ### Registration Confirmation Email
 
-After a new public registration is created, the app sends [RegistrationSubmitted.php](/mnt/c/laragon/www/esijil/app/Notifications/RegistrationSubmitted.php) to the participant when the notification toggle is enabled.
+After a new public registration is created, the app sends [RegistrationSubmitted.php](app/Notifications/RegistrationSubmitted.php) to the participant when the notification toggle is enabled.
 
 The notification is queued with:
 
@@ -243,7 +241,7 @@ php artisan queue:retry all
 
 Outgoing emails are logged by `ejoi8/filament-email-logs`.
 
-The plugin is registered in [AuthPanelProvider.php](/mnt/c/laragon/www/esijil/app/Providers/Filament/AuthPanelProvider.php), authorized for authenticated panel users, and shown under the `Settings` navigation group.
+The plugin is registered in [AuthPanelProvider.php](app/Providers/Filament/AuthPanelProvider.php), authorized for authenticated panel users, and shown under the `Settings` navigation group.
 
 Email log migrations are loaded by the package and create/update the `email_logs` table. The admin panel exposes email log listing, preview, and resend actions.
 
@@ -251,27 +249,26 @@ Email log migrations are loaded by the package and create/update the `email_logs
 
 Certificate generation currently revolves around these classes:
 
-- [RegistrationCertificateIssuer.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/RegistrationCertificateIssuer.php)
-- [StoredCertificatePdf.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/StoredCertificatePdf.php)
-- [PdfmeCertificateRenderer.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/PdfmeCertificateRenderer.php)
+- [RegistrationCertificateIssuer.php](app/Services/Certificates/RegistrationCertificateIssuer.php)
+- [StoredCertificatePdf.php](app/Services/Certificates/StoredCertificatePdf.php)
+- [PdfmeCertificateRenderer.php](app/Services/Certificates/PdfmeCertificateRenderer.php)
 
 Current behavior:
 
 - issuing a certificate writes certificate metadata onto the `registrations` row
 - downloads render from the current `Registration`
-- the renderer can refresh `certificate_template_snapshot` from the linked template depending on the event’s `certificate_template_update_mode`
-- `certificate_metadata.template_schema_snapshot` is used to preserve a stable schema context
+- templates are resolved **live** from the linked `CertificateTemplate` at download time — there is no stored snapshot, so editing a template (or changing an event's template) retroactively changes already-issued certificates. This is intentional design.
 
 Server-side PDF generation uses DomPDF, so certificate downloads do not require Node on the server. Node/npm is still used for building the Filament designer frontend assets.
 
 Important rendering note:
 
 - the Filament designer preview is rendered in-browser with `@pdfme/ui`
-- downloaded certificates are rendered server-side by [PdfmeCertificateRenderer.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/PdfmeCertificateRenderer.php) through DomPDF
+- downloaded certificates are rendered server-side by [PdfmeCertificateRenderer.php](app/Services/Certificates/PdfmeCertificateRenderer.php) through DomPDF
 - saved templates are shared between both paths, but text layout can still differ slightly because the preview and download do not use the same rendering engine
 - image fields are explicitly fitted with pdfme-style contain math in the server renderer so logos, signatures, and backgrounds preserve their aspect ratio more closely
 
-Relevant config lives in [config/certificates.php](/mnt/c/laragon/www/esijil/config/certificates.php).
+Relevant config lives in [config/certificates.php](config/certificates.php).
 
 ## Template Management
 
@@ -280,23 +277,23 @@ Templates are managed through `CertificateTemplateResource` and its designer pag
 Key points:
 
 - templates store both legacy schema-style data and `pdfme_template`
-- the Filament designer page is [Designer.php](/mnt/c/laragon/www/esijil/app/Filament/Resources/CertificateTemplates/Pages/Designer.php)
-- seeded defaults are maintained by [CertificateTemplateSeeder.php](/mnt/c/laragon/www/esijil/database/seeders/CertificateTemplateSeeder.php)
+- the Filament designer page is [Designer.php](app/Filament/Resources/CertificateTemplates/Pages/Designer.php)
+- seeded defaults are maintained by [CertificateTemplateSeeder.php](database/seeders/CertificateTemplateSeeder.php)
 - attendance slip defaults reuse the participation layout and replace the certificate title with `Slip Kehadiran`
 
 Fonts used by the renderer/designer live in:
 
-- [public/fonts/certificates](/mnt/c/laragon/www/esijil/public/fonts/certificates)
+- [public/fonts/certificates](public/fonts/certificates)
 
 Relevant rendering files:
 
-- [resources/js/certificate-template-designer.js](/mnt/c/laragon/www/esijil/resources/js/certificate-template-designer.js)
-- [app/Services/Certificates/PdfmeCertificateRenderer.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/PdfmeCertificateRenderer.php)
-- [resources/views/certificates/pdfme-dompdf.blade.php](/mnt/c/laragon/www/esijil/resources/views/certificates/pdfme-dompdf.blade.php)
+- [resources/js/certificate-template-designer.js](resources/js/certificate-template-designer.js)
+- [app/Services/Certificates/PdfmeCertificateRenderer.php](app/Services/Certificates/PdfmeCertificateRenderer.php)
+- [resources/views/certificates/pdfme-dompdf.blade.php](resources/views/certificates/pdfme-dompdf.blade.php)
 
 ## Seeders
 
-The default [DatabaseSeeder.php](/mnt/c/laragon/www/esijil/database/seeders/DatabaseSeeder.php) currently:
+The default [DatabaseSeeder.php](database/seeders/DatabaseSeeder.php) currently:
 
 - creates `admin@admin.com` with password `password`
 - runs `LegacyEsijilSeeder`
@@ -381,11 +378,11 @@ Useful focused files:
 
 ## Key Files
 
-- [routes/web.php](/mnt/c/laragon/www/esijil/routes/web.php)
-- [app/Models/Event.php](/mnt/c/laragon/www/esijil/app/Models/Event.php)
-- [app/Models/Registration.php](/mnt/c/laragon/www/esijil/app/Models/Registration.php)
-- [app/Http/Controllers/CertificateLookupController.php](/mnt/c/laragon/www/esijil/app/Http/Controllers/CertificateLookupController.php)
-- [app/Http/Controllers/EventRegistrationController.php](/mnt/c/laragon/www/esijil/app/Http/Controllers/EventRegistrationController.php)
-- [app/Services/Certificates/PdfmeCertificateRenderer.php](/mnt/c/laragon/www/esijil/app/Services/Certificates/PdfmeCertificateRenderer.php)
-- [app/Filament/Resources/Events](/mnt/c/laragon/www/esijil/app/Filament/Resources/Events)
-- [app/Filament/Resources/CertificateTemplates](/mnt/c/laragon/www/esijil/app/Filament/Resources/CertificateTemplates)
+- [routes/web.php](routes/web.php)
+- [app/Models/Event.php](app/Models/Event.php)
+- [app/Models/Registration.php](app/Models/Registration.php)
+- [app/Http/Controllers/CertificateLookupController.php](app/Http/Controllers/CertificateLookupController.php)
+- [app/Http/Controllers/EventRegistrationController.php](app/Http/Controllers/EventRegistrationController.php)
+- [app/Services/Certificates/PdfmeCertificateRenderer.php](app/Services/Certificates/PdfmeCertificateRenderer.php)
+- [app/Filament/Resources/Events](app/Filament/Resources/Events)
+- [app/Filament/Resources/CertificateTemplates](app/Filament/Resources/CertificateTemplates)

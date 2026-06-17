@@ -1,5 +1,6 @@
 <?php
 
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 /*
@@ -15,6 +16,9 @@ use Tests\TestCase;
 
 pest()->extend(TestCase::class)
  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
+    ->beforeEach(function () {
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    })
     ->in('Feature');
 
 /*

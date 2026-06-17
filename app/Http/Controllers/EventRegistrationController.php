@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\EventStatus;
+use App\Enums\RegistrationSource;
 use App\Http\Requests\StoreEventRegistrationRequest;
 use App\Models\Event;
 use App\Models\Participant;
@@ -169,8 +171,8 @@ class EventRegistrationController extends Controller
                 'event_id' => $event->id,
                 'participant_id' => $participant->id,
                 'registered_at' => now(),
-                'attendance_status' => 'registered',
-                'source' => 'public_form',
+                'attendance_status' => AttendanceStatus::Registered->value,
+                'source' => RegistrationSource::PublicForm->value,
             ]);
         } catch (QueryException $exception) {
             if (! $this->isUniqueConstraintViolation($exception)) {

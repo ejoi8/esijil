@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Role;
 
 /**
  * @extends Factory<User>
@@ -16,6 +17,31 @@ class UserFactory extends Factory
      * The current password being used by the factory.
      */
     protected static ?string $password;
+
+    /**
+     * Make factory users administrators by default so panel tests retain full
+     * access. Use ->staff() or ->roleless() to override.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function (User $user): void {
+            if ($user->roles()->count() === 0) {
+                $user->assignRole(Role::findOrCreate('admin', 'web'));
+            }
+        });
+    }
+
+    public function staff(): static
+    {
+        return $this->afterCreating(
+            fn (User $user) => $user->syncRoles([Role::findOrCreate('staff', 'web')]),
+        );
+    }
+
+    public function roleless(): static
+    {
+        return $this->afterCreating(fn (User $user) => $user->syncRoles([]));
+    }
 
     /**
      * Define the model's default state.

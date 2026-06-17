@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Registrations\Tables;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\CertificateType;
+use App\Enums\RegistrationSource;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Registration;
 use Filament\Actions\Action;
@@ -38,6 +40,7 @@ class RegistrationsTable
                     ->sortable(),
                 TextColumn::make('attendance_status')
                     ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => AttendanceStatus::labelFor($state))
                     ->searchable(),
                 TextColumn::make('checked_in_at')
                     ->dateTime('d M Y H:i')
@@ -47,6 +50,7 @@ class RegistrationsTable
                     ->sortable(),
                 TextColumn::make('source')
                     ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => RegistrationSource::labelFor($state))
                     ->searchable(),
                 TextColumn::make('certificate_type')
                     ->label('Certificate Type')
@@ -75,11 +79,7 @@ class RegistrationsTable
             ->defaultSort('registered_at', 'desc')
             ->filters([
                 SelectFilter::make('source')
-                    ->options([
-                        'legacy_import' => 'Legacy Import',
-                        'public_form' => 'Public Form',
-                        'admin' => 'Admin',
-                    ]),
+                    ->options(RegistrationSource::options()),
                 TrashedFilter::make(),
             ])
             ->recordActions([

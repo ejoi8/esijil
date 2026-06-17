@@ -2,11 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\MembershipStatus;
+use App\Http\Requests\Concerns\NormalizesNokp;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreEventRegistrationRequest extends FormRequest
 {
+    use NormalizesNokp;
+
     public function authorize(): bool
     {
         return true;
@@ -20,11 +24,19 @@ class StoreEventRegistrationRequest extends FormRequest
         return [
             'full_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'nokp' => ['required', 'string', 'max:20'],
+            'nokp' => $this->nokpRules(),
             'phone' => ['nullable', 'string', 'max:50'],
-            'membership_status' => ['required', Rule::in(['member', 'non_member'])],
+            'membership_status' => ['required', Rule::in(MembershipStatus::values())],
             'membership_notes' => ['nullable', 'string', 'max:1000'],
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return $this->nokpMessages();
     }
 
     /**
@@ -40,17 +52,5 @@ class StoreEventRegistrationRequest extends FormRequest
             'membership_status' => (string) $this->input('membership_status'),
             'membership_notes' => $this->filled('membership_notes') ? (string) $this->input('membership_notes') : null,
         ];
-    }
-
-    public function nokp(): string
-    {
-        return preg_replace('/\D+/', '', (string) $this->input('nokp'));
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'nokp' => $this->nokp(),
-        ]);
     }
 }

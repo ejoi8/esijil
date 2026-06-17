@@ -18,7 +18,12 @@ class EditRegistration extends EditRecord
 
     protected function afterSave(): void
     {
-        app(RegistrationCertificateIssuer::class)->issueFor($this->record);
+        // Only re-issue when a field that affects the certificate changed, so
+        // editing unrelated fields (e.g. remarks) does not silently overwrite
+        // a per-registration certificate type/template with the event's.
+        if ($this->record->wasChanged(['event_id', 'attendance_status', 'completed_at', 'certificate_type'])) {
+            app(RegistrationCertificateIssuer::class)->issueFor($this->record);
+        }
     }
 
     protected function getHeaderActions(): array

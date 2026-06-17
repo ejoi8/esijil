@@ -5,8 +5,20 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-it('allows authenticated users to access the filament auth panel', function () {
+it('allows admins to access the filament auth panel', function () {
     $this->actingAs(User::factory()->create())
         ->get('/auth')
         ->assertSuccessful();
+});
+
+it('allows staff to access the filament auth panel', function () {
+    $this->actingAs(User::factory()->staff()->create())
+        ->get('/auth')
+        ->assertSuccessful();
+});
+
+it('forbids users without a panel role from accessing the filament auth panel', function () {
+    $this->actingAs(User::factory()->roleless()->create())
+        ->get('/auth')
+        ->assertForbidden();
 });

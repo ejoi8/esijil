@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\RegistrationSource;
 use App\Models\Branch;
 use App\Models\Registration;
 use Illuminate\Database\Query\Builder;
@@ -13,26 +14,39 @@ class RefreshLegacyEsijilSeeder extends Seeder
 {
     protected string $legacyConnection = 'legacy';
 
+    /**
+     * DESTRUCTIVE: hard-deletes imported events/registrations and re-mirrors the
+     * legacy tables. `db:seed` already confirms before running in production;
+     * everything below runs in a single transaction so a mid-run failure rolls
+     * the purge back instead of leaving a half-truncated database.
+     */
     public function run(): void
     {
-        $participantIdsToDelete = $this->participantIdsLinkedOnlyToLegacyImport();
+        $this->command?->warn('RefreshLegacyEsijilSeeder will hard-delete imported legacy data and re-import it.');
 
-        $this->purgeImportedApplicationData($participantIdsToDelete);
-        $this->replaceMirroredLegacyTables();
+        $participantIdsToDelete = DB::transaction(function (): Collection {
+            $ids = $this->participantIdsLinkedOnlyToLegacyImport();
 
-        $this->call([
-            LegacyEsijilSeeder::class,
-            NormalizeLegacyBranchesSeeder::class,
-        ]);
+            $this->purgeImportedApplicationData($ids);
+            $this->replaceMirroredLegacyTables();
 
-        $this->deleteStaleLegacyBranchesWithoutParticipants();
+            $this->call([
+                LegacyEsijilSeeder::class,
+                NormalizeLegacyBranchesSeeder::class,
+            ]);
+
+            $this->deleteStaleLegacyBranchesWithoutParticipants();
+
+            return $ids;
+        });
+
         $this->summarize($participantIdsToDelete);
     }
 
     protected function participantIdsLinkedOnlyToLegacyImport(): Collection
     {
         $participantIds = Registration::query()
-            ->where('source', 'legacy_import')
+            ->where('source', RegistrationSource::LegacyImport->value)
             ->distinct()
             ->pluck('participant_id');
 
@@ -42,7 +56,7 @@ class RefreshLegacyEsijilSeeder extends Seeder
 
         $participantIdsWithNonLegacyRegistrations = Registration::query()
             ->whereIn('participant_id', $participantIds)
-            ->where('source', '<>', 'legacy_import')
+            ->where('source', '<>', RegistrationSource::LegacyImport->value)
             ->distinct()
             ->pluck('participant_id');
 
@@ -54,7 +68,7 @@ class RefreshLegacyEsijilSeeder extends Seeder
     protected function purgeImportedApplicationData(Collection $participantIdsToDelete): void
     {
         DB::table('registrations')
-            ->where('source', 'legacy_import')
+            ->where('source', RegistrationSource::LegacyImport->value)
             ->delete();
 
         DB::table('events')
@@ -77,7 +91,9 @@ class RefreshLegacyEsijilSeeder extends Seeder
 
     protected function replaceMirroredLegacyTable(string $table): void
     {
-        DB::table($table)->truncate();
+        // delete() (not truncate()) so the refresh stays inside the transaction;
+        // TRUNCATE implicitly commits on MySQL and cannot be rolled back.
+        DB::table($table)->delete();
 
         $this->legacyTable($table)
             ->orderBy('id')

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\MembershipStatus;
 use Database\Factories\ParticipantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,6 +25,13 @@ class Participant extends Model
 {
     /** @use HasFactory<ParticipantFactory> */
     use HasFactory, Notifiable, SoftDeletes;
+
+    protected function casts(): array
+    {
+        return [
+            'membership_status' => MembershipStatus::class,
+        ];
+    }
 
     public function branch(): BelongsTo
     {

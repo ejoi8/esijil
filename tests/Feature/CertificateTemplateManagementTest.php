@@ -605,7 +605,7 @@ it('does not add template snapshot metadata when issuing a certificate', functio
         'certificate_type' => 'participation_certificate',
         'template_key' => $template->key,
     ]);
-    $registration = Registration::factory()->for($event)->create([
+    $registration = Registration::factory()->for($event)->source('public_form')->create([
         'certificate_metadata' => null,
     ]);
 

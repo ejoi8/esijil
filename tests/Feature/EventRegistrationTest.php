@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\EventStatus;
+use App\Enums\MembershipStatus;
 use App\Models\Event;
 use App\Models\Participant;
 use App\Models\Registration;
@@ -86,7 +87,7 @@ it('registers a participant for a published event', function () {
     expect($participant)->not->toBeNull()
         ->and($participant->full_name)->toBe('Siti Puspanita')
         ->and($participant->email)->toBe('siti@example.test')
-        ->and($participant->membership_status)->toBe('member');
+        ->and($participant->membership_status)->toBe(MembershipStatus::Member);
 
     $registration = Registration::query()
         ->where('event_id', $event->id)
@@ -195,7 +196,7 @@ it('throttles repeated registration attempts for the same participant', function
         'registration_closes_at' => now()->addDay(),
     ]);
     $url = $event->publicRegistrationUrl();
-    RateLimiter::clear('127.0.0.1|'.sha1($url.'|900101015555'));
+    RateLimiter::clear('127.0.0.1|event:'.$event->id.'|'.sha1('900101015555'));
     $payload = [
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',

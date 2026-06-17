@@ -3,6 +3,7 @@
 namespace App\Services\Certificates;
 
 use App\Enums\CertificateType;
+use App\Enums\RegistrationSource;
 use App\Models\Registration;
 
 class RegistrationCertificateIssuer
@@ -21,7 +22,7 @@ class RegistrationCertificateIssuer
             'certificate_metadata' => array_replace(
                 is_array($registration->certificate_metadata) ? $registration->certificate_metadata : [],
                 [
-                    'source' => data_get($registration->certificate_metadata, 'source', $registration->source ?: 'public_registration'),
+                    'source' => data_get($registration->certificate_metadata, 'source', $registration->source?->value ?? RegistrationSource::PublicForm->value),
                 ],
             ),
         ])->save();

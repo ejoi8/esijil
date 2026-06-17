@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Events\RelationManagers;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\CertificateType;
+use App\Enums\RegistrationSource;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Participant;
 use App\Models\Registration;
@@ -60,20 +62,12 @@ class RegistrationsRelationManager extends RelationManager
                             ->default(now())
                             ->required(),
                         Select::make('attendance_status')
-                            ->options([
-                                'registered' => 'Registered',
-                                'attended' => 'Attended',
-                                'no_show' => 'No-show',
-                            ])
-                            ->default('registered')
+                            ->options(AttendanceStatus::options())
+                            ->default(AttendanceStatus::Registered->value)
                             ->required(),
                         Select::make('source')
-                            ->options([
-                                'legacy_import' => 'Legacy Import',
-                                'public_form' => 'Public Form',
-                                'admin' => 'Admin',
-                            ])
-                            ->default('admin')
+                            ->options(RegistrationSource::options())
+                            ->default(RegistrationSource::Admin->value)
                             ->required(),
                         DateTimePicker::make('checked_in_at'),
                         DateTimePicker::make('completed_at'),
@@ -104,9 +98,11 @@ class RegistrationsRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('attendance_status')
                     ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => AttendanceStatus::labelFor($state))
                     ->searchable(),
                 TextColumn::make('source')
                     ->badge()
+                    ->formatStateUsing(fn (mixed $state): string => RegistrationSource::labelFor($state))
                     ->searchable(),
                 TextColumn::make('certificate_type')
                     ->label('Certificate Type')
