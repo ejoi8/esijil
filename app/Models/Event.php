@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\CustomFieldEntity;
 use App\Enums\EventStatus;
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 #[Fillable([
+    'organization_id',
     'legacy_id',
     'title',
     'description',
@@ -33,7 +35,7 @@ use Illuminate\Support\Str;
 class Event extends Model
 {
     /** @use HasFactory<EventFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToOrganization, HasFactory, SoftDeletes;
 
     protected function casts(): array
     {

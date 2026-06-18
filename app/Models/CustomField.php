@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\CustomFieldEntity;
 use App\Enums\CustomFieldScope;
 use App\Enums\CustomFieldType;
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\CustomFieldFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * dashboard via CustomFieldResource and surfaced everywhere by App\Fields\CustomFields.
  */
 #[Fillable([
+    'organization_id',
     'entity',
     'event_id',
     'key',
@@ -35,7 +37,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class CustomField extends Model
 {
     /** @use HasFactory<CustomFieldFactory> */
-    use HasFactory;
+    use BelongsToOrganization, HasFactory;
 
     protected function casts(): array
     {

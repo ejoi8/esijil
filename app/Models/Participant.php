@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\ParticipantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 
 #[Fillable([
+    'organization_id',
     'full_name',
     'email',
     'nokp',
@@ -20,7 +22,7 @@ use Illuminate\Notifications\Notifiable;
 class Participant extends Model
 {
     /** @use HasFactory<ParticipantFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use BelongsToOrganization, HasFactory, Notifiable, SoftDeletes;
 
     protected function casts(): array
     {

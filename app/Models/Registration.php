@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\AttendanceStatus;
 use App\Enums\RegistrationSource;
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\RegistrationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
+    'organization_id',
     'legacy_id',
     'event_id',
     'participant_id',
@@ -30,7 +32,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Registration extends Model
 {
     /** @use HasFactory<RegistrationFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToOrganization, HasFactory, SoftDeletes;
 
     protected function casts(): array
     {

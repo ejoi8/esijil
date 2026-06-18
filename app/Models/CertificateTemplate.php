@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\CertificateTemplateFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 #[Fillable([
+    'organization_id',
     'name',
     'key',
     'schema',
@@ -20,7 +22,7 @@ use Illuminate\Support\Str;
 class CertificateTemplate extends Model
 {
     /** @use HasFactory<CertificateTemplateFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToOrganization, HasFactory, SoftDeletes;
 
     public const DEFAULT_SCHEMA = [
         'header' => '',
