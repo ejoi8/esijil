@@ -53,9 +53,9 @@
             <section class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-gray-900">
                 <div class="space-y-4">
                     <div>
-                        <h2 class="text-base font-semibold text-gray-950 dark:text-white">Suggested Fields</h2>
+                        <h2 class="text-base font-semibold text-gray-950 dark:text-white">Insert Fields</h2>
                         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-                            Use text placeholders for runtime certificate data. Use image field names when you want a standard logo, signature, or background slot on the canvas.
+                            Click any field to drop it on the canvas, then drag it into place. Text fields fill with live data at render; image fields hold a logo/signature you upload (the QR fills automatically).
                         </p>
                     </div>
 
@@ -64,18 +64,19 @@
                             <h3 class="text-sm font-medium text-gray-900 dark:text-white">Text Placeholders</h3>
 
                             <div class="grid gap-2">
-                                @foreach ([
-                                    'participant_name' => 'Participant full name',
-                                    'event_title' => 'Event or program title',
-                                    'date_line' => 'Formatted date line',
-                                    'organizer' => 'Organizer name',
-                                    'signature_name' => 'Signature person name',
-                                    'signature_title' => 'Signature person title',
-                                ] as $placeholder => $description)
-                                    <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
-                                        <div class="font-mono text-xs font-semibold text-primary-700 dark:text-primary-300">{!! '&#123;&#123;' . e($placeholder) . '&#125;&#125;' !!}</div>
-                                        <div class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ $description }}</div>
-                                    </div>
+                                @foreach (\App\Services\Certificates\CertificateVariables::text() as $token => $description)
+                                    <button
+                                        type="button"
+                                        data-pdfme-insert="text"
+                                        data-pdfme-token="{{ $token }}"
+                                        class="group flex w-full items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-left transition hover:border-primary-400 hover:bg-primary-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-primary-500/10"
+                                    >
+                                        <span class="min-w-0">
+                                            <span class="block font-mono text-xs font-semibold text-primary-700 dark:text-primary-300">{!! '&#123;&#123;' . e($token) . '&#125;&#125;' !!}</span>
+                                            <span class="mt-0.5 block truncate text-xs text-gray-600 dark:text-gray-400">{{ $description }}</span>
+                                        </span>
+                                        <span class="shrink-0 text-xs font-semibold text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-300">+ Add</span>
+                                    </button>
                                 @endforeach
                             </div>
                         </div>
@@ -84,15 +85,19 @@
                             <h3 class="text-sm font-medium text-gray-900 dark:text-white">Image Field Names</h3>
 
                             <div class="grid gap-2">
-                                @foreach ([
-                                    'logo_image' => 'Use for the certificate logo image',
-                                    'signature_image' => 'Use for the signature image',
-                                    'background_image' => 'Use for a full-page or decorative background image',
-                                ] as $fieldName => $description)
-                                    <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 dark:border-white/10 dark:bg-white/5">
-                                        <div class="font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300">{{ $fieldName }}</div>
-                                        <div class="mt-1 text-xs text-gray-600 dark:text-gray-400">{{ $description }}</div>
-                                    </div>
+                                @foreach (\App\Services\Certificates\CertificateVariables::images() as $fieldName => $description)
+                                    <button
+                                        type="button"
+                                        data-pdfme-insert="image"
+                                        data-pdfme-name="{{ $fieldName }}"
+                                        class="group flex w-full items-center justify-between gap-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-left transition hover:border-emerald-400 hover:bg-emerald-50 dark:border-white/10 dark:bg-white/5 dark:hover:bg-emerald-500/10"
+                                    >
+                                        <span class="min-w-0">
+                                            <span class="block font-mono text-xs font-semibold text-emerald-700 dark:text-emerald-300">{{ $fieldName }}</span>
+                                            <span class="mt-0.5 block truncate text-xs text-gray-600 dark:text-gray-400">{{ $description }}</span>
+                                        </span>
+                                        <span class="shrink-0 text-xs font-semibold text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-300">+ Add</span>
+                                    </button>
                                 @endforeach
                             </div>
 

@@ -144,6 +144,85 @@ const initializeRoot = async (root) => {
         setStatus(statusElement, 'Reset to the default layout. Save to keep it.', 'dirty');
     });
 
+    const fieldNamesOf = (template) =>
+        (Array.isArray(template?.schemas?.[0]) ? template.schemas[0] : []).map((field) => field?.name);
+
+    // pdfme requires unique field names. Text content carries the {{token}}, so
+    // the name is just an id and can be suffixed freely.
+    const uniqueName = (template, base) => {
+        const names = new Set(fieldNamesOf(template));
+
+        if (!names.has(base)) {
+            return base;
+        }
+
+        let suffix = 2;
+
+        while (names.has(`${base}_${suffix}`)) {
+            suffix += 1;
+        }
+
+        return `${base}_${suffix}`;
+    };
+
+    root.querySelectorAll('[data-pdfme-insert]').forEach((button) => {
+        button.addEventListener('click', () => {
+            const next = clone(currentTemplate);
+
+            if (!Array.isArray(next.schemas) || !Array.isArray(next.schemas[0])) {
+                next.schemas = [[]];
+            }
+
+            let field;
+
+            if (button.dataset.pdfmeInsert === 'image') {
+                const name = button.dataset.pdfmeName;
+
+                // Image names must match the renderer variable exactly, so they
+                // cannot be suffixed — skip if one is already present.
+                if (fieldNamesOf(next).includes(name)) {
+                    setStatus(statusElement, `"${name}" is already on the canvas.`, 'dirty');
+
+                    return;
+                }
+
+                field = {
+                    name,
+                    type: 'image',
+                    content: '',
+                    position: { x: 20, y: 20 },
+                    width: 40,
+                    height: 40,
+                    rotate: 0,
+                    opacity: 1,
+                };
+            } else {
+                const token = button.dataset.pdfmeToken;
+
+                field = {
+                    name: uniqueName(next, token),
+                    type: 'text',
+                    content: `{{${token}}}`,
+                    position: { x: 20, y: 20 },
+                    width: 90,
+                    height: 10,
+                    rotate: 0,
+                    alignment: 'left',
+                    verticalAlignment: 'top',
+                    fontSize: 13,
+                    lineHeight: 1.2,
+                    characterSpacing: 0,
+                    fontColor: '#000000',
+                };
+            }
+
+            next.schemas[0].push(field);
+            currentTemplate = next;
+            designer.updateTemplate(currentTemplate);
+            setStatus(statusElement, `Added "${field.name}". Drag it into place, then Save.`, 'dirty');
+        });
+    });
+
     setStatus(statusElement, 'Ready.', 'neutral');
 };
 
