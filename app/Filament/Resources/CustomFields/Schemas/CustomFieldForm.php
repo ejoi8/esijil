@@ -110,7 +110,8 @@ class CustomFieldForm
                             ->helperText('Optional. Exposes this value to certificate templates as {{your_variable}}.')
                             ->columnSpanFull(),
                     ])
-                    ->columns(2),
+                    ->columns(2)
+                    ->columnSpanFull(),
             ]);
     }
 }
