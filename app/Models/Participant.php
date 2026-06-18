@@ -10,9 +10,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 #[Fillable([
     'organization_id',
+    'public_token',
+    'external_id',
     'full_name',
     'email',
     'nokp',
@@ -29,6 +32,17 @@ class Participant extends Model
         return [
             'details' => 'array',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // An unguessable public identity carried in the QR / certificate / status
+        // link, regardless of how the participant entered (registration/CSV/manual).
+        static::creating(function (Participant $participant): void {
+            if (blank($participant->public_token)) {
+                $participant->public_token = (string) Str::ulid();
+            }
+        });
     }
 
     public function registrations(): HasMany

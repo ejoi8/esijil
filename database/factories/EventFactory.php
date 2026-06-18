@@ -37,6 +37,7 @@ class EventFactory extends Factory
             'registration_open' => false,
             'status' => fake()->randomElement(EventStatus::cases()),
             'certificate_template_id' => CertificateTemplate::factory(),
+            'modules' => ['registration', 'certificate'],
             'created_by' => User::factory(),
         ];
     }

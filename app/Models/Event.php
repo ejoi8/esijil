@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\CertificateRelease;
 use App\Enums\CustomFieldEntity;
+use App\Enums\EventModule;
 use App\Enums\EventStatus;
+use App\Enums\ScanMatchMode;
 use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -30,6 +33,9 @@ use Illuminate\Support\Str;
     'registration_open',
     'status',
     'certificate_template_id',
+    'modules',
+    'scan_match_mode',
+    'certificate_release',
     'created_by',
 ])]
 class Event extends Model
@@ -44,6 +50,9 @@ class Event extends Model
             'ends_at' => 'datetime',
             'registration_open' => 'boolean',
             'status' => EventStatus::class,
+            'modules' => 'array',
+            'scan_match_mode' => ScanMatchMode::class,
+            'certificate_release' => CertificateRelease::class,
             'details' => 'array',
         ];
     }
@@ -53,6 +62,10 @@ class Event extends Model
         static::creating(function (Event $event): void {
             if (blank($event->public_id)) {
                 $event->public_id = static::generatePublicId();
+            }
+
+            if ($event->modules === null) {
+                $event->modules = [EventModule::Registration->value, EventModule::Certificate->value];
             }
         });
     }
@@ -99,6 +112,11 @@ class Event extends Model
     {
         return $this->hasMany(Registration::class)
             ->whereNotNull('certificate_template_id');
+    }
+
+    public function hasModule(EventModule $module): bool
+    {
+        return in_array($module->value, $this->modules ?? [], true);
     }
 
     /**

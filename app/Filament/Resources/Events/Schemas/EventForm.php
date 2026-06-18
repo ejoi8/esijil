@@ -2,12 +2,16 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
+use App\Enums\CertificateRelease;
 use App\Enums\CustomFieldEntity;
+use App\Enums\EventModule;
 use App\Enums\EventStatus;
+use App\Enums\ScanMatchMode;
 use App\Fields\CustomFields;
 use App\Models\Event;
 use App\Support\QrCode;
 use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -104,6 +108,31 @@ class EventForm
                     ->columns(2)
                     ->columnSpan(['default' => 'full', 'lg' => 7])
                     ->extraAttributes(['class' => 'h-full']),
+                Section::make('Modules')
+                    ->icon(Heroicon::OutlinedRectangleStack)
+                    ->compact()
+                    ->schema([
+                        CheckboxList::make('modules')
+                            ->options(EventModule::options())
+                            ->default([EventModule::Registration->value, EventModule::Certificate->value])
+                            ->live()
+                            ->helperText('Which capabilities this event uses — any combination.')
+                            ->columnSpanFull(),
+                        Select::make('scan_match_mode')
+                            ->label('Scan matches by')
+                            ->options(ScanMatchMode::options())
+                            ->formatStateUsing(fn (mixed $state): ?string => ScanMatchMode::fromMixed($state)?->value)
+                            ->default(ScanMatchMode::Token->value)
+                            ->visible(fn (Get $get): bool => in_array(EventModule::Attendance->value, $get('modules') ?? [], true)),
+                        Select::make('certificate_release')
+                            ->label('Release certificate')
+                            ->options(CertificateRelease::options())
+                            ->formatStateUsing(fn (mixed $state): ?string => CertificateRelease::fromMixed($state)?->value)
+                            ->default(CertificateRelease::Immediate->value)
+                            ->visible(fn (Get $get): bool => in_array(EventModule::Certificate->value, $get('modules') ?? [], true)),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
                 Section::make('Registration Access')
                     ->icon(Heroicon::OutlinedLink)
                     ->compact()
