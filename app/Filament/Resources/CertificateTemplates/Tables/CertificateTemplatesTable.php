@@ -27,9 +27,6 @@ class CertificateTemplatesTable
                     ->sortable(),
                 TextColumn::make('key')
                     ->searchable(),
-                TextColumn::make('type')
-                    ->badge()
-                    ->sortable(),
                 IconColumn::make('is_active')
                     ->boolean(),
                 TextColumn::make('events_count')
