@@ -6,6 +6,7 @@ use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\RelationManagers\IssuedCertificatesRelationManager;
+use App\Filament\Resources\Events\RelationManagers\RegistrationFieldsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\RegistrationsRelationManager;
 use App\Models\CertificateTemplate;
 use App\Models\Event;
@@ -44,7 +45,7 @@ it('stores the authenticated creator and selected template key when creating eve
         ->and($event->template_key)->toBe('seminar-template');
 });
 
-it('requires event dates and registration window dates to remain chronological', function () {
+it('requires the event end date to remain chronological', function () {
     $user = User::factory()->create();
     $template = CertificateTemplate::factory()->create([
         'type' => 'participation_certificate',
@@ -58,8 +59,6 @@ it('requires event dates and registration window dates to remain chronological',
             'starts_at' => now()->addWeek()->format('Y-m-d H:i:s'),
             'ends_at' => now()->addDays(6)->format('Y-m-d H:i:s'),
             'organizer_name' => 'PUSPANITA Kebangsaan',
-            'registration_opens_at' => now()->addDays(3)->format('Y-m-d H:i:s'),
-            'registration_closes_at' => now()->addDays(2)->format('Y-m-d H:i:s'),
             'status' => 'draft',
             'certificate_type' => 'participation_certificate',
             'certificate_template_id' => $template->id,
@@ -67,7 +66,6 @@ it('requires event dates and registration window dates to remain chronological',
         ->call('create')
         ->assertHasFormErrors([
             'ends_at',
-            'registration_closes_at',
         ]);
 });
 
@@ -75,9 +73,11 @@ it('registers relation managers for registrations and issued certificates', func
     expect(EventResource::getRelations())->toBe([
         RegistrationsRelationManager::class,
         IssuedCertificatesRelationManager::class,
+        RegistrationFieldsRelationManager::class,
     ])
         ->and(RegistrationsRelationManager::isLazy())->toBeFalse()
-        ->and(IssuedCertificatesRelationManager::isLazy())->toBeFalse();
+        ->and(IssuedCertificatesRelationManager::isLazy())->toBeFalse()
+        ->and(RegistrationFieldsRelationManager::isLazy())->toBeFalse();
 });
 
 it('renders the event edit page with associated data tabs', function () {
@@ -138,6 +138,5 @@ it('shows certificate template guidance on the event create page', function () {
 
     Livewire::test(CreateEvent::class)
         ->assertSuccessful()
-        ->assertSee('Only templates matching the selected certificate type are available.')
-        ->assertSee('Filled automatically from the selected template.');
+        ->assertSee('Only designs matching the type above.');
 });

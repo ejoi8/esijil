@@ -16,8 +16,6 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             RolesAndPermissionsSeeder::class,
-            // LegacyEsijilSeeder::class,
-            NormalizeLegacyBranchesSeeder::class,
             CertificateTemplateSeeder::class,
         ]);
     }

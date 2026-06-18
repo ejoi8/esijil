@@ -4,7 +4,8 @@ namespace App\Services\Certificates;
 
 use App\Enums\CertificatePdfRenderer;
 use App\Enums\CertificateType;
-use App\Fields\ParticipantFields;
+use App\Enums\CustomFieldEntity;
+use App\Fields\CustomFields;
 use App\Models\CertificateTemplate;
 use App\Models\Registration;
 use App\Settings\CertificateSettings;
@@ -85,12 +86,22 @@ class PdfmeCertificateRenderer
         $participant = $registration->participant;
         $templateSchema = $this->resolveCurrentTemplateSchema($registration);
 
-        // Flexible participant fields that opt in via a `cert_var`. Merged first
-        // so core variables (participant_name, etc.) can never be overridden.
+        // Custom fields that opt in via a `cert_var`. Merged first so core
+        // variables (participant_name, etc.) can never be overridden.
         $detailVariables = [];
-        foreach (ParticipantFields::all() as $key => $field) {
-            if (! empty($field['cert_var'])) {
-                $detailVariables[$field['cert_var']] = ParticipantFields::display($key, data_get($participant->details, $key));
+        foreach (CustomFields::definitions(CustomFieldEntity::Participant) as $field) {
+            if ($field->cert_var) {
+                $detailVariables[$field->cert_var] = CustomFields::display($field, data_get($participant->details, $field->key));
+            }
+        }
+        foreach (CustomFields::definitions(CustomFieldEntity::Event) as $field) {
+            if ($field->cert_var) {
+                $detailVariables[$field->cert_var] = CustomFields::display($field, data_get($event->details, $field->key));
+            }
+        }
+        foreach (CustomFields::definitions(CustomFieldEntity::Registration, $event) as $field) {
+            if ($field->cert_var) {
+                $detailVariables[$field->cert_var] = CustomFields::display($field, data_get($registration->details, $field->key));
             }
         }
 

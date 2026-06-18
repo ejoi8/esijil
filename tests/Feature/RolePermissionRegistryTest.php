@@ -32,9 +32,10 @@ it('grants each role exactly its registry permissions', function () {
 it('limits staff to operational permissions', function () {
     $staff = Permissions::forRole(UserRole::Staff);
 
-    expect($staff)->toContain('branch.view')
+    expect($staff)->toContain('participant.view')
         ->and($staff)->not->toContain('user.view')
-        ->and($staff)->not->toContain('branch.forceDelete')
+        ->and($staff)->not->toContain('customField.view')
+        ->and($staff)->not->toContain('participant.forceDelete')
         ->and($staff)->not->toContain(Permissions::SETTINGS_MANAGE)
         ->and($staff)->not->toContain(Permissions::EMAIL_LOG_VIEW);
 });

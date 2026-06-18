@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Participants\Tables;
 
-use App\Enums\MembershipStatus;
-use App\Fields\ParticipantFields;
+use App\Enums\CustomFieldEntity;
+use App\Fields\CustomFields;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -11,7 +11,6 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
@@ -33,14 +32,7 @@ class ParticipantsTable
                     ->searchable(),
                 TextColumn::make('phone')
                     ->searchable(),
-                TextColumn::make('branch.name')
-                    ->label('Branch')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('membership_status')
-                    ->badge()
-                    ->searchable(),
-                ...self::detailColumns(),
+                ...CustomFields::tableColumns(CustomFieldEntity::Participant),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -56,9 +48,7 @@ class ParticipantsTable
             ])
             ->defaultSort('full_name')
             ->filters([
-                SelectFilter::make('membership_status')
-                    ->label('Membership Status')
-                    ->options(MembershipStatus::options()),
+                ...CustomFields::tableFilters(CustomFieldEntity::Participant),
                 TrashedFilter::make(),
             ])
             ->recordActions([
@@ -72,24 +62,5 @@ class ParticipantsTable
                     RestoreBulkAction::make(),
                 ]),
             ]);
-    }
-
-    /**
-     * Toggleable columns for the flexible fields in config/participant_fields.php.
-     *
-     * @return array<int, TextColumn>
-     */
-    protected static function detailColumns(): array
-    {
-        $columns = [];
-
-        foreach (ParticipantFields::all() as $key => $field) {
-            $columns[] = TextColumn::make("details.{$key}")
-                ->label($field['label'] ?? str($key)->headline()->toString())
-                ->formatStateUsing(fn (mixed $state): string => ParticipantFields::display($key, $state))
-                ->toggleable(isToggledHiddenByDefault: true);
-        }
-
-        return $columns;
     }
 }

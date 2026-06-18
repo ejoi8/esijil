@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Branch;
 use App\Models\Participant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,9 +22,6 @@ class ParticipantFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'nokp' => fake()->unique()->numerify('############'),
             'phone' => fake()->optional()->phoneNumber(),
-            'branch_id' => Branch::factory(),
-            'membership_status' => fake()->randomElement(['member', 'non_member']),
-            'membership_notes' => fake()->optional()->sentence(),
         ];
     }
 }

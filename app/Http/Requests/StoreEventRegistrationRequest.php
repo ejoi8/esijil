@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\MembershipStatus;
-use App\Fields\ParticipantFields;
+use App\Enums\CustomFieldEntity;
+use App\Fields\CustomFields;
 use App\Http\Requests\Concerns\NormalizesNokp;
+use App\Models\Event;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreEventRegistrationRequest extends FormRequest
 {
@@ -22,31 +22,64 @@ class StoreEventRegistrationRequest extends FormRequest
      */
     public function rules(): array
     {
-        return array_merge([
-            'full_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
-            'nokp' => $this->nokpRules(),
-            'phone' => ['nullable', 'string', 'max:50'],
-            'membership_status' => ['required', Rule::in(MembershipStatus::values())],
-            'membership_notes' => ['nullable', 'string', 'max:1000'],
-        ], ParticipantFields::rules('public'));
+        return array_merge(
+            [
+                'full_name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'email', 'max:255'],
+                'nokp' => $this->nokpRules(),
+                'phone' => ['nullable', 'string', 'max:50'],
+            ],
+            CustomFields::rules(CustomFieldEntity::Participant, 'public', 'participant_details'),
+            CustomFields::rules(CustomFieldEntity::Registration, 'public', 'registration_details', $this->event()),
+        );
     }
 
     /**
-     * Submitted values for the public flexible fields (config/participant_fields.php),
-     * limited to defined public keys so arbitrary keys can't be injected.
+     * The event being registered for (route-model-bound), used to scope
+     * per-event registration custom fields.
+     */
+    protected function event(): ?Event
+    {
+        $event = $this->route('event');
+
+        return $event instanceof Event ? $event : null;
+    }
+
+    /**
+     * Submitted values for the public participant custom fields.
      *
      * @return array<string, mixed>
      */
-    public function publicDetails(): array
+    public function publicParticipantDetails(): array
+    {
+        return $this->collectDetails(CustomFieldEntity::Participant, 'participant_details');
+    }
+
+    /**
+     * Submitted values for the public registration custom fields.
+     *
+     * @return array<string, mixed>
+     */
+    public function publicRegistrationDetails(): array
+    {
+        return $this->collectDetails(CustomFieldEntity::Registration, 'registration_details', $this->event());
+    }
+
+    /**
+     * Collect submitted values for an entity's public fields, limited to defined
+     * keys so arbitrary keys can't be injected into the details bag.
+     *
+     * @return array<string, mixed>
+     */
+    protected function collectDetails(CustomFieldEntity $entity, string $prefix, ?Event $event = null): array
     {
         $details = [];
 
-        foreach (array_keys(ParticipantFields::publicFields()) as $key) {
-            $value = $this->input("details.{$key}");
+        foreach (CustomFields::publicDefinitions($entity, $event) as $field) {
+            $value = $this->input("{$prefix}.{$field->key}");
 
             if ($value !== null && $value !== '') {
-                $details[$key] = $value;
+                $details[$field->key] = $value;
             }
         }
 
@@ -71,8 +104,6 @@ class StoreEventRegistrationRequest extends FormRequest
             'email' => (string) $this->input('email'),
             'nokp' => $this->nokp(),
             'phone' => $this->filled('phone') ? (string) $this->input('phone') : null,
-            'membership_status' => (string) $this->input('membership_status'),
-            'membership_notes' => $this->filled('membership_notes') ? (string) $this->input('membership_notes') : null,
         ];
     }
 }

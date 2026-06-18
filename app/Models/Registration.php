@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'completed_at',
     'source',
     'remarks',
+    'details',
     'certificate_type',
     'certificate_template_id',
     'certificate_template_key',
@@ -45,6 +46,7 @@ class Registration extends Model
             'certificate_type' => CertificateType::class,
             'certificate_issued_at' => 'datetime',
             'certificate_metadata' => 'array',
+            'details' => 'array',
         ];
     }
 

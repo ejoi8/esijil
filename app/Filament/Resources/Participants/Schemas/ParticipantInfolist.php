@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\Participants\Schemas;
 
-use App\Fields\ParticipantFields;
+use App\Enums\CustomFieldEntity;
+use App\Fields\CustomFields;
 use App\Models\Participant;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -19,17 +20,10 @@ class ParticipantInfolist
                 TextEntry::make('nokp'),
                 TextEntry::make('phone')
                     ->placeholder('-'),
-                TextEntry::make('branch.name')
-                    ->label('Branch')
-                    ->placeholder('-'),
-                TextEntry::make('membership_status'),
                 TextEntry::make('registrations_count')
                     ->counts('registrations')
                     ->label('Registrations'),
-                TextEntry::make('membership_notes')
-                    ->placeholder('-')
-                    ->columnSpanFull(),
-                ...self::detailEntries(),
+                ...CustomFields::infolistEntries(CustomFieldEntity::Participant),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),
@@ -40,24 +34,5 @@ class ParticipantInfolist
                     ->dateTime()
                     ->visible(fn (Participant $record): bool => $record->trashed()),
             ]);
-    }
-
-    /**
-     * Infolist entries for the flexible fields in config/participant_fields.php.
-     *
-     * @return array<int, TextEntry>
-     */
-    protected static function detailEntries(): array
-    {
-        $entries = [];
-
-        foreach (ParticipantFields::all() as $key => $field) {
-            $entries[] = TextEntry::make("details.{$key}")
-                ->label($field['label'] ?? str($key)->headline()->toString())
-                ->formatStateUsing(fn (mixed $state): string => ParticipantFields::display($key, $state))
-                ->placeholder('-');
-        }
-
-        return $entries;
     }
 }

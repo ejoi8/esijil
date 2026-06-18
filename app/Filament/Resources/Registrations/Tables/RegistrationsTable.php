@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\Registrations\Tables;
 
+use App\Enums\CustomFieldEntity;
 use App\Enums\RegistrationSource;
+use App\Fields\CustomFields;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Registration;
 use Filament\Actions\Action;
@@ -48,6 +50,7 @@ class RegistrationsTable
                 TextColumn::make('source')
                     ->badge()
                     ->searchable(),
+                ...CustomFields::tableColumns(CustomFieldEntity::Registration),
                 TextColumn::make('certificate_type')
                     ->label('Certificate Type')
                     ->badge()
@@ -76,6 +79,7 @@ class RegistrationsTable
             ->filters([
                 SelectFilter::make('source')
                     ->options(RegistrationSource::options()),
+                ...CustomFields::tableFilters(CustomFieldEntity::Registration),
                 TrashedFilter::make(),
             ])
             ->recordActions([

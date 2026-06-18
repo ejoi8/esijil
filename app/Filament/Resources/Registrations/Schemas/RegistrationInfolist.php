@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Registrations\Schemas;
 
+use App\Enums\CustomFieldEntity;
+use App\Fields\CustomFields;
 use App\Models\Registration;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -47,6 +49,7 @@ class RegistrationInfolist
                 TextEntry::make('remarks')
                     ->placeholder('-')
                     ->columnSpanFull(),
+                ...CustomFields::infolistEntries(CustomFieldEntity::Registration),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

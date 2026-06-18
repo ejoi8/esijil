@@ -1,7 +1,10 @@
 <?php
 
+use App\Enums\CustomFieldScope;
+use App\Enums\CustomFieldType;
 use App\Enums\EventStatus;
 use App\Filament\Resources\Participants\Pages\CreateParticipant;
+use App\Models\CustomField;
 use App\Models\Event;
 use App\Models\Participant;
 use App\Models\Registration;
@@ -13,57 +16,66 @@ use Livewire\Livewire;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    config(['participant_fields' => [
-        'jawatan' => [
-            'label' => 'Jawatan',
-            'type' => 'text',
-            'rules' => ['nullable', 'string', 'max:255'],
-            'scope' => 'public',
-            'sort' => 10,
-            'active' => true,
-            'cert_var' => 'participant_jawatan',
-        ],
-        'shirt_size' => [
-            'label' => 'Saiz Baju',
-            'type' => 'select',
-            'options' => ['S' => 'S', 'M' => 'M', 'L' => 'L'],
-            'rules' => ['nullable'],
-            'scope' => 'public',
-            'sort' => 20,
-            'active' => true,
-        ],
-        'internal_note' => [
-            'label' => 'Nota Dalaman',
-            'type' => 'textarea',
-            'rules' => ['nullable', 'string'],
-            'scope' => 'admin',
-            'sort' => 30,
-            'active' => true,
-        ],
-    ]]);
+    CustomField::create([
+        'entity' => 'participant',
+        'key' => 'jawatan',
+        'label' => 'Jawatan',
+        'type' => CustomFieldType::Text->value,
+        'scope' => CustomFieldScope::PublicForm->value,
+        'sort' => 10,
+        'active' => true,
+        'cert_var' => 'participant_jawatan',
+    ]);
+
+    CustomField::create([
+        'entity' => 'participant',
+        'key' => 'shirt_size',
+        'label' => 'Saiz Baju',
+        'type' => CustomFieldType::Select->value,
+        'options' => ['S' => 'S', 'M' => 'M', 'L' => 'L'],
+        'scope' => CustomFieldScope::PublicForm->value,
+        'sort' => 20,
+        'active' => true,
+    ]);
+
+    CustomField::create([
+        'entity' => 'participant',
+        'key' => 'internal_note',
+        'label' => 'Nota Dalaman',
+        'type' => CustomFieldType::Textarea->value,
+        'scope' => CustomFieldScope::Admin->value,
+        'sort' => 30,
+        'active' => true,
+    ]);
 });
 
 function openEvent(): Event
 {
     return Event::factory()->create([
         'status' => EventStatus::Published,
-        'registration_opens_at' => now()->subDay(),
-        'registration_closes_at' => now()->addDay(),
+        'registration_open' => true,
     ]);
 }
 
 function registrationPayload(array $overrides = []): array
 {
+    // membership_status is now a required public participant custom field, so it
+    // must always be supplied under participant_details (merged with overrides).
+    $participantDetails = array_merge(
+        ['membership_status' => 'member'],
+        $overrides['participant_details'] ?? [],
+    );
+    unset($overrides['participant_details']);
+
     return array_merge([
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
         'nokp' => '900101015555',
         'phone' => '0123456789',
-        'membership_status' => 'member',
-    ], $overrides);
+    ], $overrides, ['participant_details' => $participantDetails]);
 }
 
-it('renders public flexible fields on the registration form but not admin-scoped ones', function () {
+it('renders public custom fields on the registration form but not admin-scoped ones', function () {
     $event = openEvent();
 
     $this->get($event->publicRegistrationUrl())
@@ -73,23 +85,23 @@ it('renders public flexible fields on the registration form but not admin-scoped
         ->assertDontSee('Nota Dalaman');
 });
 
-it('validates a flexible select field against its options', function () {
+it('validates a custom select field against its options', function () {
     $event = openEvent();
 
     $this->post($event->publicRegistrationUrl(), registrationPayload([
-        'details' => ['shirt_size' => 'XXL'],
-    ]))->assertSessionHasErrors('details.shirt_size');
+        'participant_details' => ['shirt_size' => 'XXL'],
+    ]))->assertSessionHasErrors('participant_details.shirt_size');
 });
 
-it('stores flexible field values in participant details on public registration', function () {
+it('stores custom field values in participant details on public registration', function () {
     $event = openEvent();
 
     $this->post($event->publicRegistrationUrl(), registrationPayload([
-        'details' => ['jawatan' => 'Setiausaha', 'shirt_size' => 'M'],
+        'participant_details' => ['jawatan' => 'Setiausaha', 'shirt_size' => 'M'],
     ]))->assertRedirect();
 
     expect(Participant::query()->firstWhere('nokp', '900101015555')->details)
-        ->toBe(['jawatan' => 'Setiausaha', 'shirt_size' => 'M']);
+        ->toMatchArray(['jawatan' => 'Setiausaha', 'shirt_size' => 'M']);
 });
 
 it('keeps existing details when re-registering with new public values', function () {
@@ -100,14 +112,14 @@ it('keeps existing details when re-registering with new public values', function
     ]);
 
     $this->post($event->publicRegistrationUrl(), registrationPayload([
-        'details' => ['jawatan' => 'Bendahari'],
+        'participant_details' => ['jawatan' => 'Bendahari'],
     ]))->assertRedirect();
 
     expect($participant->refresh()->details)
-        ->toBe(['internal_note' => 'kept', 'jawatan' => 'Bendahari']);
+        ->toMatchArray(['internal_note' => 'kept', 'jawatan' => 'Bendahari']);
 });
 
-it('exposes flexible fields with a cert_var as certificate variables', function () {
+it('exposes custom fields with a cert_var as certificate variables', function () {
     $participant = Participant::factory()->create(['details' => ['jawatan' => 'Setiausaha']]);
     $registration = Registration::factory()->for($participant)->create()->load(['event', 'participant']);
 
@@ -118,7 +130,7 @@ it('exposes flexible fields with a cert_var as certificate variables', function 
         ->and($variables['participant_name'])->toBe($participant->full_name);
 });
 
-it('saves a flexible field via the admin participant form', function () {
+it('saves a custom field via the admin participant form', function () {
     $this->actingAs(User::factory()->create());
 
     Livewire::test(CreateParticipant::class)
@@ -126,8 +138,7 @@ it('saves a flexible field via the admin participant form', function () {
             'full_name' => 'Nor Aisyah',
             'email' => 'aisyah@example.test',
             'nokp' => '880202025566',
-            'membership_status' => 'member',
-            'details' => ['jawatan' => 'Pengerusi'],
+            'details' => ['membership_status' => 'member', 'jawatan' => 'Pengerusi'],
         ])
         ->call('create')
         ->assertHasNoFormErrors();

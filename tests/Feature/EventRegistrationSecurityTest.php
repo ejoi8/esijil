@@ -22,8 +22,7 @@ it('restores a soft-deleted participant and registration instead of duplicating 
 
     $event = Event::factory()->create([
         'status' => EventStatus::Published,
-        'registration_opens_at' => now()->subDay(),
-        'registration_closes_at' => now()->addDay(),
+        'registration_open' => true,
     ]);
     $participant = Participant::factory()->create(['nokp' => '900101015555']);
     $registration = Registration::factory()->for($participant)->for($event)->create();
@@ -36,7 +35,7 @@ it('restores a soft-deleted participant and registration instead of duplicating 
         'email' => 'siti@example.test',
         'nokp' => '900101015555',
         'phone' => '0123456789',
-        'membership_status' => 'member',
+        'participant_details' => ['membership_status' => 'member'],
     ])
         ->assertRedirect()
         ->assertSessionHas('registration_exists');

@@ -49,7 +49,7 @@ class EventRegistrationController extends Controller
 
         [$participant, $registration] = DB::transaction(function () use ($request, $event, $certificateIssuer): array {
             $participant = $this->resolveParticipant($request);
-            $registration = $this->resolveRegistration($event, $participant);
+            $registration = $this->resolveRegistration($request, $event, $participant);
 
             $certificateIssuer->issueFor($registration);
 
@@ -94,17 +94,7 @@ class EventRegistrationController extends Controller
 
     protected function registrationIsOpen(Event $event): bool
     {
-        $now = now();
-
-        if ($event->registration_opens_at !== null && $now->lt($event->registration_opens_at)) {
-            return false;
-        }
-
-        if ($event->registration_closes_at !== null && $now->gt($event->registration_closes_at)) {
-            return false;
-        }
-
-        return true;
+        return (bool) $event->registration_open;
     }
 
     protected function abortUnlessAuthorizedRegistrationSession(Registration $registration): void
@@ -150,7 +140,7 @@ class EventRegistrationController extends Controller
         $participant->fill($request->participantData());
 
         // Merge (not replace) so admin-only detail fields survive re-registration.
-        $details = $request->publicDetails();
+        $details = $request->publicParticipantDetails();
         if ($details !== []) {
             $participant->details = array_merge($participant->details ?? [], $details);
         }
@@ -160,8 +150,10 @@ class EventRegistrationController extends Controller
         return $participant;
     }
 
-    protected function resolveRegistration(Event $event, Participant $participant): Registration
+    protected function resolveRegistration(StoreEventRegistrationRequest $request, Event $event, Participant $participant): Registration
     {
+        $details = $request->publicRegistrationDetails();
+
         $registration = Registration::withTrashed()
             ->where('event_id', $event->id)
             ->where('participant_id', $participant->id)
@@ -172,7 +164,7 @@ class EventRegistrationController extends Controller
                 $registration->restore();
             }
 
-            return $registration;
+            return $this->applyRegistrationDetails($registration, $details);
         }
 
         try {
@@ -182,6 +174,7 @@ class EventRegistrationController extends Controller
                 'registered_at' => now(),
                 'attendance_status' => AttendanceStatus::Registered->value,
                 'source' => RegistrationSource::PublicForm->value,
+                'details' => $details !== [] ? $details : null,
             ]);
         } catch (QueryException $exception) {
             if (! $this->isUniqueConstraintViolation($exception)) {
@@ -197,8 +190,24 @@ class EventRegistrationController extends Controller
                 $registration->restore();
             }
 
-            return $registration;
+            return $this->applyRegistrationDetails($registration, $details);
         }
+    }
+
+    /**
+     * Merge (not replace) submitted registration custom fields, so admin-only
+     * detail fields survive a re-registration.
+     *
+     * @param  array<string, mixed>  $details
+     */
+    protected function applyRegistrationDetails(Registration $registration, array $details): Registration
+    {
+        if ($details !== []) {
+            $registration->details = array_merge($registration->details ?? [], $details);
+            $registration->save();
+        }
+
+        return $registration;
     }
 
     protected function isUniqueConstraintViolation(QueryException $exception): bool

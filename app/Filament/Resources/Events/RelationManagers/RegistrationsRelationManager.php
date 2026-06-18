@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Events\RelationManagers;
 
 use App\Enums\AttendanceStatus;
+use App\Enums\CustomFieldEntity;
 use App\Enums\RegistrationSource;
+use App\Fields\CustomFields;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Participant;
 use App\Models\Registration;
@@ -72,6 +74,7 @@ class RegistrationsRelationManager extends RelationManager
                         DateTimePicker::make('completed_at'),
                         Textarea::make('remarks')
                             ->columnSpanFull(),
+                        ...CustomFields::formComponents(CustomFieldEntity::Registration, $this->getOwnerRecord()),
                     ])
                     ->columns(2),
             ]);

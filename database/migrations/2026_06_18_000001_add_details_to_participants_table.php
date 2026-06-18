@@ -5,9 +5,10 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Flexible participant fields (see FLEXIBLE_FIELDS.md): a single JSON bag for
- * optional, long-tail attributes defined in config/participant_fields.php, so a
- * new field can be added without a migration. Core columns stay first-class.
+ * A JSON bag for admin-defined custom participant fields (see the custom_fields
+ * table and App\Fields\CustomFields). Values are keyed by the field's `key`; the
+ * definitions live in custom_fields, so a field can be added/removed from the
+ * dashboard with no migration. Core columns stay first-class.
  */
 return new class extends Migration
 {

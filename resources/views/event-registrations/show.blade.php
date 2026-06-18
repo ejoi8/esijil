@@ -56,7 +56,7 @@
                 @endif
 
                 @if (! $registrationIsOpen)
-                    <div class="notice">Pendaftaran belum dibuka atau telah ditutup.</div>
+                    <div class="notice">Pendaftaran ditutup buat masa ini.</div>
                 @endif
 
                 <form action="{{ request()->fullUrl() }}" method="POST" data-registration-form style="margin-top:18px">
@@ -107,64 +107,26 @@
                         </div>
                     </div>
 
-                    <div class="field grid2">
-                        <div>
-                            <label class="label" for="phone">Telefon</label>
-                            <input
-                                id="phone"
-                                name="phone"
-                                type="text"
-                                inputmode="tel"
-                                class="input"
-                                value="{{ old('phone') }}"
-                                placeholder="Nombor telefon"
-                            >
-                            @error('phone')<p class="err">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div>
-                            <label class="label" for="membership_status">Status Ahli</label>
-                            <div class="selectwrap">
-                                <select id="membership_status" name="membership_status" class="select" required>
-                                    <option value="member" @selected(old('membership_status') === 'member')>Ahli</option>
-                                    <option value="non_member" @selected(old('membership_status', 'non_member') === 'non_member')>Bukan Ahli</option>
-                                </select>
-                                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                    <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                            @error('membership_status')<p class="err">{{ $message }}</p>@enderror
-                        </div>
+                    <div class="field">
+                        <label class="label" for="phone">Telefon</label>
+                        <input
+                            id="phone"
+                            name="phone"
+                            type="text"
+                            inputmode="tel"
+                            class="input"
+                            value="{{ old('phone') }}"
+                            placeholder="Nombor telefon"
+                        >
+                        @error('phone')<p class="err">{{ $message }}</p>@enderror
                     </div>
 
-                    @foreach (\App\Fields\ParticipantFields::publicFields() as $detailKey => $detailField)
-                        @php
-                            $detailValue = old("details.{$detailKey}");
-                            $detailType = $detailField['type'] ?? 'text';
-                            $detailRequired = $detailField['required'] ?? false;
-                            $detailLabel = $detailField['label'] ?? \Illuminate\Support\Str::headline($detailKey);
-                        @endphp
-                        <div class="field">
-                            <label class="label" for="detail_{{ $detailKey }}">{{ $detailLabel }}</label>
-                            @if ($detailType === 'select')
-                                <div class="selectwrap">
-                                    <select id="detail_{{ $detailKey }}" name="details[{{ $detailKey }}]" class="select" @required($detailRequired)>
-                                        <option value="">—</option>
-                                        @foreach (($detailField['options'] ?? []) as $optionValue => $optionLabel)
-                                            <option value="{{ $optionValue }}" @selected((string) $detailValue === (string) $optionValue)>{{ $optionLabel }}</option>
-                                        @endforeach
-                                    </select>
-                                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                </div>
-                            @elseif ($detailType === 'textarea')
-                                <textarea id="detail_{{ $detailKey }}" name="details[{{ $detailKey }}]" class="input" rows="3" @required($detailRequired)>{{ $detailValue }}</textarea>
-                            @else
-                                <input id="detail_{{ $detailKey }}" name="details[{{ $detailKey }}]" type="text" class="input" value="{{ $detailValue }}" @required($detailRequired)>
-                            @endif
-                            @error("details.{$detailKey}")<p class="err">{{ $message }}</p>@enderror
-                        </div>
+                    @foreach (\App\Fields\CustomFields::publicDefinitions(\App\Enums\CustomFieldEntity::Participant) as $field)
+                        @include('event-registrations._custom-field', ['field' => $field, 'prefix' => 'participant_details'])
+                    @endforeach
+
+                    @foreach (\App\Fields\CustomFields::publicDefinitions(\App\Enums\CustomFieldEntity::Registration, $event) as $field)
+                        @include('event-registrations._custom-field', ['field' => $field, 'prefix' => 'registration_details'])
                     @endforeach
 
                     <div class="formfoot">

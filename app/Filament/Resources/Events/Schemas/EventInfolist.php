@@ -2,9 +2,12 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
+use App\Enums\CustomFieldEntity;
 use App\Enums\EventStatus;
+use App\Fields\CustomFields;
 use App\Models\Event;
 use App\Support\QrCode;
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Image;
 use Filament\Schemas\Components\Section;
@@ -18,7 +21,7 @@ class EventInfolist
         return $schema
             ->columns(12)
             ->components([
-                Section::make('Overview')
+                Section::make('Event Details')
                     ->description('Core event details shown to admins and used across registration and certificate flows.')
                     ->icon(Heroicon::OutlinedCalendarDays)
                     ->schema([
@@ -51,9 +54,15 @@ class EventInfolist
                     ])
                     ->columns(4)
                     ->columnSpan(8),
+                Section::make('Additional Details')
+                    ->icon(Heroicon::OutlinedRectangleStack)
+                    ->schema(CustomFields::infolistEntries(CustomFieldEntity::Event))
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->hidden(fn (): bool => CustomFields::definitions(CustomFieldEntity::Event)->isEmpty()),
                 Section::make('Certificate Setup')
                     ->description('Default certificate behavior for registrations under this event.')
-                    ->icon(Heroicon::OutlinedRectangleStack)
+                    ->icon(Heroicon::OutlinedDocumentCheck)
                     ->schema([
                         TextEntry::make('certificate_type')
                             ->label('Certificate Type')
@@ -93,20 +102,9 @@ class EventInfolist
                     ->description('Public registration availability and the signed URL used for participant access.')
                     ->icon(Heroicon::OutlinedLink)
                     ->schema([
-                        TextEntry::make('registration_opens_at')
-                            ->label('Registration Opens')
-                            ->dateTime('d M Y H:i')
-                            ->placeholder('Always open until manually closed.'),
-                        TextEntry::make('registration_closes_at')
-                            ->label('Registration Closes')
-                            ->dateTime('d M Y H:i')
-                            ->placeholder('No closing time configured.'),
-                        TextEntry::make('registration_link_expires_at')
-                            ->label('Signed Link Expires')
-                            ->state(fn (Event $record): ?string => EventStatus::fromMixed($record->status) === EventStatus::Published
-                                ? $record->registrationLinkExpiresAt()->format('d M Y H:i')
-                                : null)
-                            ->placeholder('Publish the event to activate the signed registration link.'),
+                        IconEntry::make('registration_open')
+                            ->label('Registration Open')
+                            ->boolean(),
                         TextEntry::make('public_registration_url')
                             ->label('Signed Registration URL')
                             ->state(fn (Event $record): ?string => EventStatus::fromMixed($record->status) === EventStatus::Published

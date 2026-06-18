@@ -2,10 +2,10 @@
 
 namespace App\Policies;
 
-class BranchPolicy extends ResourcePolicy
+class CustomFieldPolicy extends ResourcePolicy
 {
     protected function prefix(): string
     {
-        return 'branch';
+        return 'customField';
     }
 }

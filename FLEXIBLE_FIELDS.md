@@ -2,6 +2,14 @@
 
 *Laravel 13.6 · Filament 5.4 · Livewire 4 · MySQL 8.4 (Laragon). Citations verified against the current codebase, 2026-06-18.*
 
+> ## ✅ Implemented (2026-06-18): dashboard-managed custom fields (Approach B)
+> The project moved past the config-file approach (Approach A) described below to a **runtime, admin-managed** system. Fields are now defined in the dashboard, not in code:
+> - **`custom_fields` table + `App\Models\CustomField`** — one row per field (entity, key, label, type, options, required, scope, sort, active, `cert_var`). Managed via **`CustomFieldResource`** (Settings → Custom Fields, admin-only).
+> - **`App\Fields\CustomFields`** — entity-aware accessor (replacing the old `ParticipantFields`). Drives the admin form/table/infolist, the public registration form, validation (derived from type + required), and certificate variables.
+> - Works for **both `participant` and `registration`** records; values live in each model's `details` JSON column. The public form namespaces inputs (`participant_details[…]` / `registration_details[…]`).
+>
+> The sections below are retained as the original design rationale (the config-file `ParticipantFields`/`config/participant_fields.php` they reference no longer exist).
+
 > **Question this answers:** the participant model is rigid — a field like "Status Ahli" (`membership_status`) is a fixed column wired into many files, so adding/removing a field is painful. How do we make fields flexible to add/remove **without over-complicating things**?
 
 ---

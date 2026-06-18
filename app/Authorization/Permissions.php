@@ -13,13 +13,13 @@ use App\Enums\UserRole;
 class Permissions
 {
     /** Panel resources gated by a policy. */
-    public const RESOURCES = ['branch', 'participant', 'event', 'registration', 'certificateTemplate', 'user'];
+    public const RESOURCES = ['participant', 'event', 'registration', 'certificateTemplate', 'user', 'customField'];
 
     /** Abilities every resource exposes (1:1 with ResourcePolicy methods). */
     public const ABILITIES = ['view', 'create', 'update', 'delete', 'forceDelete'];
 
     /** Resources a staff member may operate on (no users). */
-    public const STAFF_RESOURCES = ['branch', 'participant', 'event', 'registration', 'certificateTemplate'];
+    public const STAFF_RESOURCES = ['participant', 'event', 'registration', 'certificateTemplate'];
 
     /** Abilities staff hold (no forceDelete). */
     public const STAFF_ABILITIES = ['view', 'create', 'update', 'delete'];

@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Events\Tables;
 
 use App\Enums\CertificateType;
+use App\Enums\CustomFieldEntity;
 use App\Enums\EventStatus;
+use App\Fields\CustomFields;
 use App\Models\CertificateTemplate;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -11,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -44,6 +47,10 @@ class EventsTable
                 SelectColumn::make('status')
                     ->options(EventStatus::options())
                     ->searchable(),
+                IconColumn::make('registration_open')
+                    ->label('Reg. Open')
+                    ->boolean()
+                    ->toggleable(),
                 TextColumn::make('certificate_type')
                     ->label('Certificate Type')
                     ->badge()
@@ -53,6 +60,7 @@ class EventsTable
                     ->counts('registrations')
                     ->label('Registrations')
                     ->sortable(),
+                ...CustomFields::tableColumns(CustomFieldEntity::Event),
                 TextColumn::make('certificateTemplate.name')
                     ->label('Certificate Template')
                     ->searchable()
@@ -84,6 +92,7 @@ class EventsTable
                     ->label('Certificate Template')
                     ->relationship('certificateTemplate', 'name')
                     ->getOptionLabelFromRecordUsing(fn (CertificateTemplate $record): string => $record->name),
+                ...CustomFields::tableFilters(CustomFieldEntity::Event),
                 TrashedFilter::make(),
             ])
             ->recordActions([

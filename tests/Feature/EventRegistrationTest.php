@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\EventStatus;
-use App\Enums\MembershipStatus;
 use App\Models\Event;
 use App\Models\Participant;
 use App\Models\Registration;
@@ -23,18 +22,16 @@ it('does not expose a public event registration listing page', function () {
         ->assertNotFound();
 });
 
-it('generates a signed registration url that expires 24 hours after the event ends', function () {
+it('generates a signed registration url with no expiry', function () {
     $event = Event::factory()->create([
         'status' => EventStatus::Published,
-        'starts_at' => Carbon::parse('2026-05-01 09:00:00'),
-        'ends_at' => Carbon::parse('2026-05-01 17:00:00'),
     ]);
 
     $url = $event->publicRegistrationUrl();
     parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
 
-    expect($query)->toHaveKeys(['signature', 'expires'])
-        ->and((int) $query['expires'])->toBe($event->registrationLinkExpiresAt()->timestamp);
+    expect($query)->toHaveKey('signature')
+        ->and($query)->not->toHaveKey('expires');
 });
 
 it('requires a valid signed url to access the public registration form', function () {
@@ -42,7 +39,7 @@ it('requires a valid signed url to access the public registration form', functio
         'status' => EventStatus::Published,
     ]);
 
-    $this->get(route('events.register.show', $event))
+    $this->get(route('events.register.show', ['event' => $event->public_id]))
         ->assertForbidden();
 });
 
@@ -66,8 +63,7 @@ it('registers a participant for a published event', function () {
 
     $event = Event::factory()->create([
         'status' => EventStatus::Published,
-        'registration_opens_at' => now()->subDay(),
-        'registration_closes_at' => now()->addDay(),
+        'registration_open' => true,
     ]);
     $url = $event->publicRegistrationUrl();
 
@@ -76,8 +72,7 @@ it('registers a participant for a published event', function () {
         'email' => 'siti@example.test',
         'nokp' => '900101-01-5555',
         'phone' => '0123456789',
-        'membership_status' => 'member',
-        'membership_notes' => 'Cawangan Putrajaya',
+        'participant_details' => ['membership_status' => 'member'],
     ])
         ->assertRedirect()
         ->assertSessionHas('registration_created');
@@ -87,7 +82,7 @@ it('registers a participant for a published event', function () {
     expect($participant)->not->toBeNull()
         ->and($participant->full_name)->toBe('Siti Puspanita')
         ->and($participant->email)->toBe('siti@example.test')
-        ->and($participant->membership_status)->toBe(MembershipStatus::Member);
+        ->and($participant->details['membership_status'])->toBe('member');
 
     $registration = Registration::query()
         ->where('event_id', $event->id)
@@ -126,8 +121,7 @@ it('queues the registration confirmation notification after registration', funct
 
     $event = Event::factory()->create([
         'status' => EventStatus::Published,
-        'registration_opens_at' => now()->subDay(),
-        'registration_closes_at' => now()->addDay(),
+        'registration_open' => true,
     ]);
 
     $this->post($event->publicRegistrationUrl(), [
@@ -135,8 +129,7 @@ it('queues the registration confirmation notification after registration', funct
         'email' => 'siti@example.test',
         'nokp' => '900101-01-5555',
         'phone' => '0123456789',
-        'membership_status' => 'member',
-        'membership_notes' => 'Cawangan Putrajaya',
+        'participant_details' => ['membership_status' => 'member'],
     ])
         ->assertRedirect()
         ->assertSessionHas('registration_created');
@@ -161,8 +154,7 @@ it('does not create duplicate registrations for the same participant and event',
 
     $event = Event::factory()->create([
         'status' => EventStatus::Published,
-        'registration_opens_at' => now()->subDay(),
-        'registration_closes_at' => now()->addDay(),
+        'registration_open' => true,
     ]);
     $participant = Participant::factory()->create([
         'nokp' => '900101015555',
@@ -175,8 +167,7 @@ it('does not create duplicate registrations for the same participant and event',
         'email' => 'updated@example.test',
         'nokp' => '900101015555',
         'phone' => null,
-        'membership_status' => 'non_member',
-        'membership_notes' => null,
+        'participant_details' => ['membership_status' => 'non_member'],
     ])
         ->assertRedirect(route('events.register.success', Registration::query()->first()))
         ->assertSessionHas('registration_exists');
@@ -192,8 +183,7 @@ it('does not create duplicate registrations for the same participant and event',
 it('throttles repeated registration attempts for the same participant', function () {
     $event = Event::factory()->create([
         'status' => EventStatus::Published,
-        'registration_opens_at' => now()->subDay(),
-        'registration_closes_at' => now()->addDay(),
+        'registration_open' => true,
     ]);
     $url = $event->publicRegistrationUrl();
     RateLimiter::clear('127.0.0.1|event:'.$event->id.'|'.sha1('900101015555'));
@@ -202,7 +192,7 @@ it('throttles repeated registration attempts for the same participant', function
         'email' => 'siti@example.test',
         'nokp' => '900101015555',
         'phone' => '0123456789',
-        'membership_status' => 'member',
+        'participant_details' => ['membership_status' => 'member'],
     ];
 
     foreach (range(1, 5) as $attempt) {
@@ -223,8 +213,7 @@ it('does not send registration confirmation when disabled in application setting
 
     $event = Event::factory()->create([
         'status' => EventStatus::Published,
-        'registration_opens_at' => now()->subDay(),
-        'registration_closes_at' => now()->addDay(),
+        'registration_open' => true,
     ]);
 
     $this->post($event->publicRegistrationUrl(), [
@@ -232,8 +221,7 @@ it('does not send registration confirmation when disabled in application setting
         'email' => 'siti@example.test',
         'nokp' => '900101-01-5555',
         'phone' => '0123456789',
-        'membership_status' => 'member',
-        'membership_notes' => 'Cawangan Putrajaya',
+        'participant_details' => ['membership_status' => 'member'],
     ])
         ->assertRedirect()
         ->assertSessionHas('registration_created');
@@ -273,8 +261,7 @@ it('downloads the certificate from the registration success session', function (
 it('rejects registration when the registration window is closed', function () {
     $event = Event::factory()->create([
         'status' => EventStatus::Published,
-        'registration_opens_at' => now()->subDays(3),
-        'registration_closes_at' => now()->subDay(),
+        'registration_open' => false,
     ]);
     $url = $event->publicRegistrationUrl();
 
@@ -282,7 +269,7 @@ it('rejects registration when the registration window is closed', function () {
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
         'nokp' => '900101015555',
-        'membership_status' => 'member',
+        'participant_details' => ['membership_status' => 'member'],
     ])
         ->assertSessionHasErrors(['event']);
 
@@ -291,7 +278,7 @@ it('rejects registration when the registration window is closed', function () {
     ]);
 });
 
-it('expires the signed registration url 24 hours after the event finishes', function () {
+it('keeps the signed registration url valid indefinitely', function () {
     Carbon::setTestNow('2026-05-01 09:00:00');
 
     $event = Event::factory()->create([
@@ -301,10 +288,10 @@ it('expires the signed registration url 24 hours after the event finishes', func
     ]);
     $url = $event->publicRegistrationUrl();
 
-    Carbon::setTestNow('2026-05-02 17:00:01');
+    Carbon::setTestNow('2027-06-01 00:00:00');
 
     $this->get($url)
-        ->assertForbidden();
+        ->assertSuccessful();
 
     Carbon::setTestNow();
 });

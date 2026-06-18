@@ -3,12 +3,16 @@
 namespace App\Filament\Resources\Registrations\Schemas;
 
 use App\Enums\AttendanceStatus;
+use App\Enums\CustomFieldEntity;
 use App\Enums\RegistrationSource;
+use App\Fields\CustomFields;
+use App\Models\Event;
 use App\Models\Participant;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class RegistrationForm
@@ -23,6 +27,7 @@ class RegistrationForm
                             ->relationship('event', 'title')
                             ->searchable()
                             ->preload()
+                            ->live()
                             ->required(),
                         Select::make('participant_id')
                             ->relationship('participant', 'full_name')
@@ -45,6 +50,17 @@ class RegistrationForm
                     ])
                     ->columnSpanFull()
                     ->columns(2),
+                Section::make('Additional Details')
+                    ->schema(fn (Get $get): array => CustomFields::formComponents(
+                        CustomFieldEntity::Registration,
+                        filled($get('event_id')) ? Event::find($get('event_id')) : null,
+                    ))
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->hidden(fn (Get $get): bool => CustomFields::definitions(
+                        CustomFieldEntity::Registration,
+                        filled($get('event_id')) ? Event::find($get('event_id')) : null,
+                    )->isEmpty()),
             ]);
     }
 }
