@@ -2,9 +2,14 @@
 
 namespace App\Providers;
 
+use App\Enums\CertificatePdfRenderer;
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Services\Certificates\CertificateGenerator;
+use App\Services\Certificates\DompdfCertificateGenerator;
+use App\Services\Certificates\PdfmeNodeCertificateGenerator;
 use App\Services\Mail\MailSettingsConfigurator;
+use App\Settings\CertificateSettings;
 use App\Settings\MailSettings;
 use App\Support\Nokp;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -24,7 +29,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Pick the certificate engine from settings (default DomPDF). Concretes
+        // are resolved through the container so they stay mockable in tests, and
+        // adding a new engine only means a new generator + enum case + arm here.
+        $this->app->bind(CertificateGenerator::class, function ($app): CertificateGenerator {
+            $engine = CertificatePdfRenderer::fromMixed($app->make(CertificateSettings::class)->renderer)
+                ?? CertificatePdfRenderer::Dompdf;
+
+            return $engine === CertificatePdfRenderer::Pdfme
+                ? $app->make(PdfmeNodeCertificateGenerator::class)
+                : $app->make(DompdfCertificateGenerator::class);
+        });
     }
 
     /**

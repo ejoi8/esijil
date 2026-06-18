@@ -6,12 +6,8 @@ use App\Exceptions\CertificateRenderingException;
 use Symfony\Component\Process\Process;
 use Throwable;
 
-class PdfmeNodeCertificateGenerator
+class PdfmeNodeCertificateGenerator implements CertificateGenerator
 {
-    /**
-     * @param  array<string, mixed>  $template
-     * @param  array<string, string>  $inputs
-     */
     public function __construct(protected PdfmeFontRegistry $fontRegistry) {}
 
     /**

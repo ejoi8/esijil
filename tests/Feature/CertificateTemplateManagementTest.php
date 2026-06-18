@@ -12,6 +12,7 @@ use App\Models\Event;
 use App\Models\Participant;
 use App\Models\Registration;
 use App\Models\User;
+use App\Services\Certificates\DompdfCertificateGenerator;
 use App\Services\Certificates\PdfmeCertificateRenderer;
 use App\Services\Certificates\PdfmeFontRegistry;
 use App\Services\Certificates\PdfmeNodeCertificateGenerator;
@@ -617,7 +618,7 @@ it('does not add template snapshot metadata when issuing a certificate', functio
 });
 
 it('uses dompdf-safe text styles that stay closer to the pdfme designer output', function () {
-    $renderer = app(PdfmeCertificateRenderer::class);
+    $renderer = app(DompdfCertificateGenerator::class);
     $template = [
         'basePdf' => [
             'width' => 210,
@@ -670,7 +671,7 @@ it('uses dompdf-safe text styles that stay closer to the pdfme designer output',
 });
 
 it('preserves image aspect ratio for certificate logos in the pdf renderer', function () {
-    $renderer = app(PdfmeCertificateRenderer::class);
+    $renderer = app(DompdfCertificateGenerator::class);
     $template = [
         'basePdf' => [
             'width' => 210,
