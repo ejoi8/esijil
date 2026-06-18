@@ -59,7 +59,7 @@
                     <div class="notice">Pendaftaran ditutup buat masa ini.</div>
                 @endif
 
-                <form action="{{ request()->fullUrl() }}" method="POST" data-registration-form style="margin-top:18px">
+                <form action="{{ request()->fullUrl() }}" method="POST" enctype="multipart/form-data" data-registration-form style="margin-top:18px">
                     @csrf
 
                     <div class="field">

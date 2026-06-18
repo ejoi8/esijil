@@ -37,6 +37,8 @@
             </div>
         @elseif ($type === 'textarea')
             <textarea id="{{ $id }}" name="{{ $name }}" class="input" rows="3" @required($field->required)>{{ $value }}</textarea>
+        @elseif ($type === 'file')
+            <input id="{{ $id }}" name="{{ $name }}" type="file" class="input" @required($field->required) @if (! empty($field->accepted_file_types)) accept="{{ collect($field->accepted_file_types)->map(fn ($e) => '.'.$e)->implode(',') }}" @endif>
         @else
             <input id="{{ $id }}" name="{{ $name }}" type="{{ $inputType }}" class="input" value="{{ $value }}" @required($field->required)>
         @endif

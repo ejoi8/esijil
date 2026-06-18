@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\CustomFieldEntity;
+use App\Enums\CustomFieldType;
 use App\Fields\CustomFields;
 use App\Http\Requests\Concerns\NormalizesNokp;
 use App\Models\Event;
@@ -76,6 +77,18 @@ class StoreEventRegistrationRequest extends FormRequest
         $details = [];
 
         foreach (CustomFields::publicDefinitions($entity, $event) as $field) {
+            if ($field->type === CustomFieldType::File) {
+                $file = $this->file("{$prefix}.{$field->key}");
+
+                if ($file !== null) {
+                    // Private disk — never publicly accessible; admins download
+                    // via the auth-gated custom-field-file route.
+                    $details[$field->key] = $file->store('custom-fields', 'local');
+                }
+
+                continue;
+            }
+
             $value = $this->input("{$prefix}.{$field->key}");
 
             if ($value !== null && $value !== '') {

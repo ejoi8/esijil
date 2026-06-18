@@ -8,6 +8,7 @@ use App\Models\CustomField;
 use App\Models\Event;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Field;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -117,6 +118,11 @@ class CustomFields
             CustomFieldType::Email => ['string', 'email', 'max:255'],
             CustomFieldType::Select => ['string', 'in:'.implode(',', array_keys($field->options ?? []))],
             CustomFieldType::Checkbox => $field->required ? ['accepted'] : ['boolean'],
+            CustomFieldType::File => array_values(array_filter([
+                'file',
+                $field->max_file_kb ? 'max:'.$field->max_file_kb : null,
+                ! empty($field->accepted_file_types) ? 'mimes:'.implode(',', $field->accepted_file_types) : null,
+            ])),
             default => ['string', 'max:255'],
         });
     }
@@ -128,6 +134,10 @@ class CustomFields
     {
         if ($field->type === CustomFieldType::Checkbox) {
             return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'Ya' : 'Tidak';
+        }
+
+        if ($field->type === CustomFieldType::File) {
+            return $value ? basename((string) $value) : '';
         }
 
         if ($value === null || $value === '') {
@@ -159,6 +169,13 @@ class CustomFields
                     CustomFieldType::Date => DatePicker::make($name),
                     CustomFieldType::Email => TextInput::make($name)->email()->maxLength(255),
                     CustomFieldType::Checkbox => Toggle::make($name),
+                    CustomFieldType::File => FileUpload::make($name)
+                        ->disk('local')
+                        ->directory('custom-fields')
+                        ->visibility('private')
+                        ->previewable(false)
+                        ->when($field->max_file_kb, fn (FileUpload $upload): FileUpload => $upload->maxSize($field->max_file_kb))
+                        ->when(! empty($field->accepted_file_types), fn (FileUpload $upload): FileUpload => $upload->acceptedFileTypes(self::mimesFor($field->accepted_file_types))),
                     default => TextInput::make($name)->maxLength(255),
                 };
 
@@ -211,11 +228,53 @@ class CustomFields
      */
     public static function infolistEntries(CustomFieldEntity|string $entity, ?Event $event = null): array
     {
+        $entityValue = $entity instanceof CustomFieldEntity ? $entity->value : $entity;
+
         return self::definitions($entity, $event)
-            ->map(fn (CustomField $field): TextEntry => TextEntry::make("details.{$field->key}")
-                ->label($field->label)
-                ->formatStateUsing(fn (mixed $state): string => self::display($field, $state))
-                ->placeholder('-'))
+            ->map(function (CustomField $field) use ($entityValue): TextEntry {
+                $entry = TextEntry::make("details.{$field->key}")
+                    ->label($field->label)
+                    ->placeholder('-');
+
+                // File values live on a private disk; expose an auth-gated
+                // download link rather than the raw stored path.
+                if ($field->type === CustomFieldType::File) {
+                    return $entry
+                        ->formatStateUsing(fn (mixed $state): string => $state ? 'Muat turun fail' : '-')
+                        ->url(fn ($record): ?string => filled(data_get($record?->details, $field->key))
+                            ? route('auth.custom-field-file', ['entity' => $entityValue, 'record' => $record->getKey(), 'key' => $field->key])
+                            : null, shouldOpenInNewTab: true);
+                }
+
+                return $entry->formatStateUsing(fn (mixed $state): string => self::display($field, $state));
+            })
             ->all();
+    }
+
+    /**
+     * Map file extensions to MIME types for FileUpload's accepted types.
+     *
+     * @param  list<string>|null  $extensions
+     * @return list<string>
+     */
+    protected static function mimesFor(?array $extensions): array
+    {
+        $map = [
+            'pdf' => 'application/pdf',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls' => 'application/vnd.ms-excel',
+            'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ];
+
+        return array_values(array_filter(array_map(
+            fn (string $extension): ?string => $map[strtolower(trim($extension))] ?? null,
+            $extensions ?? [],
+        )));
     }
 }

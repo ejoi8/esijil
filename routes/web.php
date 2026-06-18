@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminRegistrationCertificateDownloadController;
 use App\Http\Controllers\CertificateLookupController;
+use App\Http\Controllers\CustomFieldFileController;
 use App\Http\Controllers\EventRegistrationController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,8 @@ Route::get('/registrations/{registration}/certificate', [EventRegistrationContro
 Route::middleware('auth')->group(function (): void {
     Route::get('/auth/registrations/{registration}/certificate', AdminRegistrationCertificateDownloadController::class)
         ->name('auth.registrations.certificate');
+    Route::get('/auth/files/{entity}/{record}/{key}', CustomFieldFileController::class)
+        ->name('auth.custom-field-file');
 });
 
 if (app()->environment('local')) {

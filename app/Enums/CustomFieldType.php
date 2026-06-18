@@ -20,6 +20,7 @@ enum CustomFieldType: string implements HasLabel
     case Select = 'select';
     case Email = 'email';
     case Checkbox = 'checkbox';
+    case File = 'file';
 
     public function label(): string
     {
@@ -31,6 +32,7 @@ enum CustomFieldType: string implements HasLabel
             self::Select => 'Dropdown',
             self::Email => 'Email',
             self::Checkbox => 'Checkbox',
+            self::File => 'File upload',
         };
     }
 

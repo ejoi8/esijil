@@ -7,6 +7,7 @@ use App\Enums\CustomFieldScope;
 use App\Enums\CustomFieldType;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -71,6 +72,17 @@ class CustomFieldForm
                             ->visible(fn (Get $get): bool => $get('type') === CustomFieldType::Select->value)
                             ->required(fn (Get $get): bool => $get('type') === CustomFieldType::Select->value)
                             ->columnSpanFull(),
+                        TextInput::make('max_file_kb')
+                            ->label('Max file size (KB)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->visible(fn (Get $get): bool => $get('type') === CustomFieldType::File->value)
+                            ->helperText('Maximum upload size in kilobytes (e.g. 5120 = 5 MB). Leave empty for no limit.'),
+                        TagsInput::make('accepted_file_types')
+                            ->label('Allowed file types')
+                            ->placeholder('pdf')
+                            ->visible(fn (Get $get): bool => $get('type') === CustomFieldType::File->value)
+                            ->helperText('File extensions, e.g. pdf, jpg, png. Leave empty to allow any type.'),
                         Select::make('scope')
                             ->options(CustomFieldScope::options())
                             ->formatStateUsing(fn (mixed $state): ?string => CustomFieldScope::fromMixed($state)?->value)
