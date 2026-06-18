@@ -40,7 +40,6 @@ it('redirects to the result page after a successful nokp lookup', function () {
 
     $event = Event::factory()->create([
         'title' => 'Seminar Kesihatan PUSPANITA',
-        'certificate_type' => 'participation_certificate',
     ]);
 
     Registration::factory()->for($participant)->for($event)->create();
@@ -66,7 +65,6 @@ it('downloads a certificate after a successful lookup session', function () {
 
     $event = Event::factory()->create([
         'title' => 'Seminar Kesihatan PUSPANITA',
-        'certificate_type' => 'participation_certificate',
     ]);
 
     $registration = Registration::factory()->for($participant)->for($event)->create();
@@ -78,13 +76,13 @@ it('downloads a certificate after a successful lookup session', function () {
     $this->get(route('certificate-lookup.download', $registration))
         ->assertSuccessful()
         ->assertHeader('content-type', 'application/pdf')
-        ->assertHeader('content-disposition', 'attachment; filename=participation_certificate-siti-puspanita-seminar-kesihatan-puspanita.pdf');
+        ->assertHeader('content-disposition', 'attachment; filename=sijil-siti-puspanita-seminar-kesihatan-puspanita.pdf');
 
     expect($registration->refresh()->cert_serial_number)->not->toBeNull()
         ->and($registration->certificate_issued_at)->not->toBeNull();
 });
 
-it('does not show certificate type labels on the lookup result table', function () {
+it('does not show organizer or venue details on the lookup result table', function () {
     $participant = Participant::factory()->create([
         'full_name' => 'Siti Puspanita',
         'nokp' => '900101015555',
@@ -92,7 +90,6 @@ it('does not show certificate type labels on the lookup result table', function 
 
     $event = Event::factory()->create([
         'title' => 'Bengkel Kehadiran PUSPANITA',
-        'certificate_type' => 'attendance_slip',
     ]);
 
     Registration::factory()->for($participant)->for($event)->create();
@@ -105,11 +102,8 @@ it('does not show certificate type labels on the lookup result table', function 
     $this->get(route('certificate-lookup.result'))
         ->assertSuccessful()
         ->assertSee('Bengkel Kehadiran PUSPANITA')
-        ->assertDontSee('Jenis')
         ->assertDontSee($event->organizer_name)
-        ->assertDontSee($event->venue ?: 'Lokasi tidak dinyatakan')
-        ->assertDontSee('Slip Kehadiran')
-        ->assertDontSee('Sijil Penyertaan');
+        ->assertDontSee($event->venue ?: 'Lokasi tidak dinyatakan');
 });
 
 it('forbids certificate download without a matching lookup session', function () {

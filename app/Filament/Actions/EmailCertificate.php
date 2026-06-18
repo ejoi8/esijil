@@ -25,7 +25,7 @@ class EmailCertificate
             ->label('Email certificate')
             ->icon(Heroicon::OutlinedEnvelope)
             ->color('gray')
-            ->visible(fn (Registration $record): bool => static::enabled() && $record->certificate_type !== null)
+            ->visible(fn (Registration $record): bool => static::enabled() && $record->certificate_template_id !== null)
             ->requiresConfirmation()
             ->modalHeading('Email certificate')
             ->modalDescription(fn (Registration $record): string => "Email {$record->participant->full_name} a link to retrieve their certificate?")
@@ -50,7 +50,7 @@ class EmailCertificate
             ->modalDescription('Email each selected participant who has an issued certificate a link to retrieve it.')
             ->action(function (Collection $records): void {
                 $sent = $records
-                    ->filter(fn (Registration $record): bool => $record->certificate_type !== null)
+                    ->filter(fn (Registration $record): bool => $record->certificate_template_id !== null)
                     ->each(fn (Registration $record) => $record->participant->notify(new CertificateIssued($record)))
                     ->count();
 

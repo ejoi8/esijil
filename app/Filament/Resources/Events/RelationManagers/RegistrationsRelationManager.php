@@ -105,10 +105,6 @@ class RegistrationsRelationManager extends RelationManager
                 TextColumn::make('source')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->badge()
-                    ->placeholder('-'),
                 TextColumn::make('cert_serial_number')
                     ->label('Certificate Serial')
                     ->placeholder('-')

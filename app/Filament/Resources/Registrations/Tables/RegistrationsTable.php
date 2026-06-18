@@ -52,11 +52,6 @@ class RegistrationsTable
                     ->badge()
                     ->searchable(),
                 ...CustomFields::tableColumns(CustomFieldEntity::Registration),
-                TextColumn::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->badge()
-                    ->placeholder('-')
-                    ->searchable(),
                 TextColumn::make('cert_serial_number')
                     ->label('Certificate Serial')
                     ->searchable(),
@@ -89,7 +84,7 @@ class RegistrationsTable
                     ->label('Download PDF')
                     ->icon(Heroicon::OutlinedArrowDownTray)
                     ->color('primary')
-                    ->visible(fn (Registration $record): bool => $record->certificate_type !== null)
+                    ->visible(fn (Registration $record): bool => $record->certificate_template_id !== null)
                     ->url(fn (Registration $record): string => RegistrationResource::certificateDownloadUrl($record))
                     ->openUrlInNewTab(),
                 EmailCertificate::recordAction(),

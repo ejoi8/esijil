@@ -19,7 +19,7 @@ class RegistrationFactory extends Factory
     public function configure(): static
     {
         return $this->afterCreating(function (Registration $registration): void {
-            if ($registration->certificate_type !== null) {
+            if ($registration->certificate_template_id !== null) {
                 return;
             }
 

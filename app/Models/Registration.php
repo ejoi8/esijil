@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\AttendanceStatus;
-use App\Enums\CertificateType;
 use App\Enums\RegistrationSource;
 use Database\Factories\RegistrationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -23,9 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'source',
     'remarks',
     'details',
-    'certificate_type',
     'certificate_template_id',
-    'certificate_template_key',
     'cert_serial_number',
     'certificate_issued_at',
     'certificate_metadata',
@@ -43,7 +40,6 @@ class Registration extends Model
             'completed_at' => 'datetime',
             'attendance_status' => AttendanceStatus::class,
             'source' => RegistrationSource::class,
-            'certificate_type' => CertificateType::class,
             'certificate_issued_at' => 'datetime',
             'certificate_metadata' => 'array',
             'details' => 'array',

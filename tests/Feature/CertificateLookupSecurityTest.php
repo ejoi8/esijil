@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 it('forbids downloading another participant certificate within a lookup session', function () {
     $alice = Participant::factory()->create(['nokp' => '900101015555']);
     $bob = Participant::factory()->create(['nokp' => '880202025566']);
-    $event = Event::factory()->create(['certificate_type' => 'participation_certificate']);
+    $event = Event::factory()->create();
 
     $bobRegistration = Registration::factory()->for($bob)->for($event)->create();
 
@@ -22,9 +22,8 @@ it('forbids downloading another participant certificate within a lookup session'
 
 it('returns 404 when downloading a registration without an issued certificate', function () {
     $participant = Participant::factory()->create(['nokp' => '900101015555']);
-    $event = Event::factory()->create(['certificate_type' => 'participation_certificate']);
+    $event = Event::factory()->create(['certificate_template_id' => null]);
     $registration = Registration::factory()->for($participant)->for($event)->create();
-    $registration->forceFill(['certificate_type' => null])->save();
 
     $this->withSession(['certificate_lookup_participant_id' => $participant->id])
         ->get(route('certificate-lookup.download', $registration))

@@ -2,7 +2,6 @@
 
 namespace App\Services\Certificates;
 
-use App\Enums\CertificateType;
 use App\Enums\CustomFieldEntity;
 use App\Fields\CustomFields;
 use App\Models\CertificateTemplate;
@@ -45,9 +44,8 @@ class PdfmeCertificateRenderer
 
         $participant = Str::slug($registration->participant->full_name);
         $event = Str::slug(Str::limit($registration->event->title, 40, ''));
-        $type = CertificateType::fromMixed($registration->certificate_type)?->value ?? (string) $registration->certificate_type;
 
-        return "{$type}-{$participant}-{$event}.pdf";
+        return "sijil-{$participant}-{$event}.pdf";
     }
 
     /**
@@ -58,11 +56,9 @@ class PdfmeCertificateRenderer
         $certificateTemplate = $this->currentCertificateTemplateForRegistration($registration);
 
         if ($certificateTemplate !== null) {
-            if ($registration->certificate_template_id !== $certificateTemplate->id
-                || $registration->certificate_template_key !== $certificateTemplate->key) {
+            if ($registration->certificate_template_id !== $certificateTemplate->id) {
                 $registration->forceFill([
                     'certificate_template_id' => $certificateTemplate->id,
-                    'certificate_template_key' => $certificateTemplate->key,
                 ])->save();
             }
 
@@ -116,7 +112,6 @@ class PdfmeCertificateRenderer
                 ? QrCode::dataUri(route('certificate-lookup.verify', ['serial' => $registration->cert_serial_number]))
                 : '',
             'generated_at' => now()->format('d M Y H:i'),
-            'certificate_type' => CertificateType::fromMixed($registration->certificate_type)?->value ?? (string) $registration->certificate_type,
             'signature_name' => (string) ($templateSchema['signature_name'] ?? ''),
             'signature_title' => (string) ($templateSchema['signature_title'] ?? ''),
         ]);

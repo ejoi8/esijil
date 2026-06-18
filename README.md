@@ -88,7 +88,7 @@ Core models:
 
 - `Branch` - participant grouping / directory metadata
 - `Participant` - a person who can join events
-- `Event` - an event with schedule, status, registration window, and default certificate settings
+- `Event` - an event with schedule, status, registration window, and an optional certificate template
 - `Registration` - the participant-to-event record, including issued certificate data
 - `CertificateTemplate` - reusable certificate template metadata, schema, and `pdfme_template`
 
@@ -100,9 +100,7 @@ Important current state:
 
 Certificate-related columns currently stored on `registrations` include:
 
-- `certificate_type`
 - `certificate_template_id`
-- `certificate_template_key`
 - `cert_serial_number`
 - `certificate_issued_at`
 - `certificate_metadata`
@@ -111,17 +109,13 @@ The merge from the older separate certificate table is captured in [2026_04_26_0
 
 ## Business Rules
 
-### Certificate types
+### Certificate issuance
 
-The app supports two certificate types via [CertificateType.php](app/Enums/CertificateType.php):
-
-- `participation_certificate`
-- `attendance_slip`
-
-Their seeded default template keys are:
-
-- `default-participation`
-- `default-attendance`
+There is no certificate "type". An event issues a certificate if (and only if) it
+has a `certificate_template_id` assigned; leaving it empty means the event issues
+nothing. The chosen template is snapshotted onto each registration at sign-up, and
+the same `certificate_template_id !== null` check gates every download and the
+public verification page.
 
 ### Issuance model
 

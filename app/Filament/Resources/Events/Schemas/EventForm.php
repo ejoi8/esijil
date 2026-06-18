@@ -2,17 +2,13 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
-use App\Enums\CertificateType;
 use App\Enums\CustomFieldEntity;
 use App\Enums\EventStatus;
 use App\Fields\CustomFields;
-use App\Models\CertificateTemplate;
 use App\Models\Event;
 use App\Support\QrCode;
-use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -21,10 +17,8 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\HtmlString;
 
 class EventForm
@@ -99,66 +93,13 @@ class EventForm
                     ->icon(Heroicon::OutlinedDocumentCheck)
                     ->compact()
                     ->schema([
-                        Select::make('certificate_type')
-                            ->label('Certificate Type')
-                            ->options(CertificateType::options())
-                            ->formatStateUsing(fn (mixed $state): ?string => CertificateType::fromMixed($state)?->value)
-                            ->default(CertificateType::ParticipationCertificate->value)
-                            ->live()
-                            ->afterStateUpdated(function (Set $set): void {
-                                $set('certificate_template_id', null);
-                                $set('template_key', null);
-                            })
-                            ->required(),
                         Select::make('certificate_template_id')
                             ->label('Certificate Template')
-                            ->relationship(
-                                'certificateTemplate',
-                                'name',
-                                modifyQueryUsing: function (Builder $query, Get $get): Builder {
-                                    $selectedType = CertificateType::fromMixed($get('certificate_type'));
-
-                                    if ($selectedType === null) {
-                                        return $query->whereKey([]);
-                                    }
-
-                                    return $query->forDocumentType($selectedType);
-                                },
-                            )
+                            ->relationship('certificateTemplate', 'name')
                             ->searchable()
                             ->preload()
-                            ->live()
-                            ->disabled(fn (Get $get): bool => blank($get('certificate_type')))
-                            ->placeholder('Select a certificate type first')
-                            ->helperText('Only designs matching the type above.')
-                            ->afterStateUpdated(function (Set $set, ?string $state): void {
-                                $set('template_key', CertificateTemplate::keyFor($state));
-                            })
-                            ->rule(function (Get $get): Closure {
-                                return function (string $attribute, mixed $value, Closure $fail) use ($get): void {
-                                    if (blank($value)) {
-                                        return;
-                                    }
-
-                                    $selectedType = CertificateType::fromMixed($get('certificate_type'));
-
-                                    if ($selectedType === null) {
-                                        $fail('Select a certificate type before choosing a template.');
-
-                                        return;
-                                    }
-
-                                    $matchesSelectedType = CertificateTemplate::matchesDocumentType($value, $selectedType);
-
-                                    if (! $matchesSelectedType) {
-                                        $fail('The selected template must match the selected certificate type.');
-                                    }
-                                };
-                            })
-                            ->required(),
-                        // Auto-filled from the chosen template (shown read-only on the View
-                        // page); kept hidden here so it persists without cluttering the form.
-                        Hidden::make('template_key'),
+                            ->placeholder('No certificate for this event')
+                            ->helperText('Assign a template to issue certificates for this event; leave empty to issue none.'),
                     ])
                     ->columns(2)
                     ->columnSpan(['default' => 'full', 'lg' => 7])

@@ -34,7 +34,7 @@
                 <p class="card-title">Sijil</p>
                 <p class="hint">PDF dijana di server setiap kali anda memuat turun sijil ini.</p>
                 <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:18px">
-                    @if ($registration->certificate_type !== null)
+                    @if ($registration->certificate_template_id !== null)
                         <a class="btn btn-solid" href="{{ route('events.register.certificate', $registration) }}">
                             Muat Turun Sijil
                         </a>

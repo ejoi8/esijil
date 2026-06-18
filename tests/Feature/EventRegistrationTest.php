@@ -100,7 +100,7 @@ it('registers a participant for a published event', function () {
 
     $this->assertDatabaseHas(Registration::class, [
         'id' => $registration->id,
-        'certificate_type' => $event->certificate_type->value,
+        'certificate_template_id' => $event->certificate_template_id,
         'cert_serial_number' => null,
     ]);
 

@@ -21,7 +21,7 @@ class EditRegistration extends EditRecord
         // Only re-issue when a field that affects the certificate changed, so
         // editing unrelated fields (e.g. remarks) does not silently overwrite
         // a per-registration certificate type/template with the event's.
-        if ($this->record->wasChanged(['event_id', 'attendance_status', 'completed_at', 'certificate_type'])) {
+        if ($this->record->wasChanged(['event_id', 'attendance_status', 'completed_at', 'certificate_template_id'])) {
             app(RegistrationCertificateIssuer::class)->issueFor($this->record);
         }
     }
@@ -34,7 +34,7 @@ class EditRegistration extends EditRecord
                 ->label('Download PDF')
                 ->icon(Heroicon::OutlinedArrowDownTray)
                 ->color('primary')
-                ->visible(fn (): bool => $this->record->certificate_type !== null)
+                ->visible(fn (): bool => $this->record->certificate_template_id !== null)
                 ->url(fn (): string => RegistrationResource::certificateDownloadUrl($this->record))
                 ->openUrlInNewTab(),
             DeleteAction::make(),

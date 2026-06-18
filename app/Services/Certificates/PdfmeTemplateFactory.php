@@ -2,7 +2,6 @@
 
 namespace App\Services\Certificates;
 
-use App\Enums\CertificateType;
 use App\Models\CertificateTemplate;
 
 class PdfmeTemplateFactory
@@ -14,12 +13,6 @@ class PdfmeTemplateFactory
      */
     public function fromCertificateTemplate(CertificateTemplate $certificateTemplate): array
     {
-        $baselineTemplate = $this->defaultTemplateFor($certificateTemplate);
-
-        if ($baselineTemplate !== null) {
-            return $baselineTemplate;
-        }
-
         return $this->fromSchema($certificateTemplate->resolvedSchema());
     }
 
@@ -95,67 +88,6 @@ class PdfmeTemplateFactory
 
             return $page;
         }, $pages));
-
-        return $template;
-    }
-
-    /**
-     * @return array<string, mixed>|null
-     */
-    protected function defaultTemplateFor(CertificateTemplate $certificateTemplate): ?array
-    {
-        $certificateType = CertificateType::fromMixed($certificateTemplate->type);
-
-        if ($certificateType === null) {
-            return null;
-        }
-
-        if ($certificateTemplate->key === CertificateType::ParticipationCertificate->templateKey()) {
-            return null;
-        }
-
-        $defaultTemplate = CertificateTemplate::query()
-            ->where('key', CertificateType::ParticipationCertificate->templateKey())
-            ->when($certificateTemplate->exists, fn ($query) => $query->whereKeyNot($certificateTemplate->getKey()))
-            ->value('pdfme_template');
-
-        if (! is_array($defaultTemplate)) {
-            return null;
-        }
-
-        return $this->withCertificateTitle(
-            $this->normalizeFullPageCanvas($defaultTemplate),
-            $certificateType === CertificateType::AttendanceSlip
-                ? (string) ($certificateTemplate->resolvedSchema()['title'] ?? $certificateType->documentTitle())
-                : null,
-        );
-    }
-
-    /**
-     * @param  array<string, mixed>  $template
-     * @return array<string, mixed>
-     */
-    protected function withCertificateTitle(array $template, ?string $title): array
-    {
-        if ($title === null || $title === '') {
-            return $template;
-        }
-
-        foreach (($template['schemas'] ?? []) as $pageIndex => $page) {
-            if (! is_array($page)) {
-                continue;
-            }
-
-            foreach ($page as $fieldIndex => $field) {
-                if (! is_array($field) || ($field['name'] ?? null) !== 'certificate_title') {
-                    continue;
-                }
-
-                $template['schemas'][$pageIndex][$fieldIndex]['content'] = $title;
-
-                return $template;
-            }
-        }
 
         return $template;
     }

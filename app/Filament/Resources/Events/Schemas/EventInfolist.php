@@ -64,17 +64,9 @@ class EventInfolist
                     ->description('Default certificate behavior for registrations under this event.')
                     ->icon(Heroicon::OutlinedDocumentCheck)
                     ->schema([
-                        TextEntry::make('certificate_type')
-                            ->label('Certificate Type')
-                            ->badge()
-                            ->color('info'),
                         TextEntry::make('certificateTemplate.name')
                             ->label('Certificate Template')
-                            ->placeholder('No template selected.'),
-                        TextEntry::make('template_key')
-                            ->label('Template Key')
-                            ->copyable()
-                            ->placeholder('-'),
+                            ->placeholder('No certificate for this event'),
                     ])
                     ->columns(1)
                     ->columnSpan(4),

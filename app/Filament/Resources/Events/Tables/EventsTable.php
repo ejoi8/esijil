@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Events\Tables;
 
-use App\Enums\CertificateType;
 use App\Enums\CustomFieldEntity;
 use App\Enums\EventStatus;
 use App\Fields\CustomFields;
@@ -51,11 +50,6 @@ class EventsTable
                     ->label('Reg. Open')
                     ->boolean()
                     ->toggleable(),
-                TextColumn::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->badge()
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('registrations_count')
                     ->counts('registrations')
                     ->label('Registrations')
@@ -85,9 +79,6 @@ class EventsTable
             ])
             ->defaultSort('starts_at', 'desc')
             ->filters([
-                SelectFilter::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->options(CertificateType::options()),
                 SelectFilter::make('certificate_template_id')
                     ->label('Certificate Template')
                     ->relationship('certificateTemplate', 'name')

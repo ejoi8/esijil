@@ -29,7 +29,7 @@
                                 <p class="t">{{ $registration->event->title }}</p>
                                 <p class="d">{{ $registration->event->starts_at?->format('d M Y') }}</p>
                             </div>
-                            @if ($registration->certificate_type !== null)
+                            @if ($registration->certificate_template_id !== null)
                                 <a class="btn btn-solid" href="{{ route('certificate-lookup.download', $registration) }}">Muat Turun</a>
                             @else
                                 <span class="none">Tiada sijil</span>

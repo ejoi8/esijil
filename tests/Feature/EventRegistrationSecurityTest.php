@@ -62,8 +62,8 @@ it('builds a signed registration link for an event with no end date', function (
 });
 
 it('returns 404 for the admin certificate download when no certificate was issued', function () {
-    $registration = Registration::factory()->create();
-    $registration->forceFill(['certificate_type' => null])->save();
+    $event = Event::factory()->create(['certificate_template_id' => null]);
+    $registration = Registration::factory()->for($event)->create();
 
     $this->actingAs(User::factory()->create())
         ->get(route('auth.registrations.certificate', $registration))

@@ -80,7 +80,7 @@ class CertificateLookupController extends Controller
     public function verify(string $serial): View
     {
         $registration = Registration::query()
-            ->whereNotNull('certificate_type')
+            ->whereNotNull('certificate_template_id')
             ->where('cert_serial_number', $serial)
             ->with(['event', 'participant'])
             ->first();
@@ -105,10 +105,10 @@ class CertificateLookupController extends Controller
         }
 
         // Lookup intentionally ignores event status — certificates remain
-        // downloadable after an event ends. A registration without an issued
-        // certificate type has nothing to render, so 404 (matches the event
-        // registration and admin download endpoints).
-        abort_unless($registration->certificate_type !== null, 404);
+        // downloadable after an event ends. A registration with no certificate
+        // template has nothing to render, so 404 (matches the event registration
+        // and admin download endpoints).
+        abort_unless($registration->certificate_template_id !== null, 404);
 
         return $storedCertificatePdf->download($registration);
     }

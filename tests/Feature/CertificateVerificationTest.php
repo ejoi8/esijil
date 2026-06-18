@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Event;
 use App\Models\Participant;
 use App\Models\Registration;
 use App\Services\Certificates\PdfmeCertificateRenderer;
@@ -26,8 +27,9 @@ it('reports an unknown serial as not found', function () {
 });
 
 it('does not verify a registration without an issued certificate', function () {
-    $registration = Registration::factory()->create();
-    $registration->forceFill(['certificate_type' => null, 'cert_serial_number' => 'NOCERT123456'])->save();
+    $event = Event::factory()->create(['certificate_template_id' => null]);
+    $registration = Registration::factory()->for($event)->create();
+    $registration->forceFill(['cert_serial_number' => 'NOCERT123456'])->save();
 
     $this->get(route('certificate-lookup.verify', ['serial' => 'NOCERT123456']))
         ->assertSuccessful()

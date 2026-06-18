@@ -39,10 +39,6 @@ class RegistrationsRelationManager extends RelationManager
                     ->badge(),
                 TextColumn::make('source')
                     ->badge(),
-                TextColumn::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->badge()
-                    ->placeholder('-'),
                 TextColumn::make('cert_serial_number')
                     ->label('Certificate Serial')
                     ->placeholder('-')
@@ -56,7 +52,7 @@ class RegistrationsRelationManager extends RelationManager
                     ->label('Download PDF')
                     ->icon(Heroicon::OutlinedArrowDownTray)
                     ->color('primary')
-                    ->visible(fn (Registration $record): bool => $record->certificate_type !== null)
+                    ->visible(fn (Registration $record): bool => $record->certificate_template_id !== null)
                     ->url(fn (Registration $record): string => RegistrationResource::certificateDownloadUrl($record))
                     ->openUrlInNewTab(),
                 EditAction::make()

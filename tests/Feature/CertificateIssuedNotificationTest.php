@@ -15,7 +15,7 @@ it('emails the certificate link to the participant via the registrations table a
     Notification::fake();
     $this->actingAs(User::factory()->create());
 
-    // The factory issues a certificate, so certificate_type is set.
+    // The factory issues a certificate (certificate_template_id is set by default).
     $registration = Registration::factory()->create();
 
     Livewire::test(ListRegistrations::class)

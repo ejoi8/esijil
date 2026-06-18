@@ -37,6 +37,6 @@ class Participant extends Model
     public function issuedCertificates(): HasMany
     {
         return $this->hasMany(Registration::class)
-            ->whereNotNull('certificate_type');
+            ->whereNotNull('certificate_template_id');
     }
 }

@@ -32,10 +32,6 @@ class IssuedCertificatesRelationManager extends RelationManager
                 TextColumn::make('participant.nokp')
                     ->label('No. KP')
                     ->searchable(),
-                TextColumn::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->badge()
-                    ->searchable(),
                 TextColumn::make('certificateTemplate.name')
                     ->label('Certificate Template')
                     ->placeholder('-')

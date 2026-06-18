@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\CertificateTemplates\Pages;
 
-use App\Enums\CertificateType;
 use App\Filament\Resources\CertificateTemplates\CertificateTemplateResource;
 use App\Models\CertificateTemplate;
 use App\Services\Certificates\PdfmeFontRegistry;
@@ -145,8 +144,8 @@ class Designer extends Page
      */
     protected function shouldUseSavedLayoutAsDefault(CertificateTemplate $certificateTemplate, array $currentTemplate): bool
     {
-        return $certificateTemplate->key === CertificateType::ParticipationCertificate->templateKey()
-            && $currentTemplate !== [];
+        // Once a template has a saved layout, prefer it as the designer baseline.
+        return $currentTemplate !== [];
     }
 
     protected function legacyAssetInliner(): PdfmeTemplateLegacyAssetInliner

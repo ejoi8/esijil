@@ -33,9 +33,6 @@ class RegistrationInfolist
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('source'),
-                TextEntry::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->placeholder('-'),
                 TextEntry::make('certificateTemplate.name')
                     ->label('Certificate Template')
                     ->placeholder('-'),

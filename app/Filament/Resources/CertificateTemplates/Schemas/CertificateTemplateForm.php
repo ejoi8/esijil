@@ -2,9 +2,7 @@
 
 namespace App\Filament\Resources\CertificateTemplates\Schemas;
 
-use App\Enums\CertificateType;
 use App\Models\CertificateTemplate;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
@@ -27,10 +25,6 @@ class CertificateTemplateForm
                             ->maxLength(255)
                             ->unique(ignoreRecord: true)
                             ->helperText('Used internally to identify this template.'),
-                        Select::make('type')
-                            ->options(CertificateType::options())
-                            ->formatStateUsing(fn (mixed $state): ?string => CertificateType::fromMixed($state)?->value)
-                            ->required(),
                         Toggle::make('is_active')
                             ->default(true)
                             ->inline(false),

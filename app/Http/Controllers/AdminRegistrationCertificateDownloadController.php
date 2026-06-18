@@ -17,7 +17,7 @@ class AdminRegistrationCertificateDownloadController extends Controller
 
         $registration->load('certificateTemplate', 'event.certificateTemplate', 'participant');
 
-        abort_unless($registration->certificate_type !== null, 404);
+        abort_unless($registration->certificate_template_id !== null, 404);
 
         return $storedCertificatePdf->download($registration);
     }

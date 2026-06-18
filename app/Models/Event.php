@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Enums\CertificateType;
 use App\Enums\CustomFieldEntity;
 use App\Enums\EventStatus;
 use Database\Factories\EventFactory;
@@ -28,8 +27,6 @@ use Illuminate\Support\Str;
     'organizer_name',
     'registration_open',
     'status',
-    'certificate_type',
-    'template_key',
     'certificate_template_id',
     'created_by',
 ])]
@@ -45,7 +42,6 @@ class Event extends Model
             'ends_at' => 'datetime',
             'registration_open' => 'boolean',
             'status' => EventStatus::class,
-            'certificate_type' => CertificateType::class,
             'details' => 'array',
         ];
     }
@@ -100,7 +96,7 @@ class Event extends Model
     public function issuedCertificates(): HasMany
     {
         return $this->hasMany(Registration::class)
-            ->whereNotNull('certificate_type');
+            ->whereNotNull('certificate_template_id');
     }
 
     /**

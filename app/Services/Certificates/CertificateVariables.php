@@ -31,7 +31,6 @@ class CertificateVariables
             'venue' => 'Venue',
             'organizer' => 'Organizer name',
             'reference' => 'Certificate serial / reference',
-            'certificate_type' => 'Certificate type',
             'signature_name' => 'Signature name',
             'signature_title' => 'Signature title',
             'generated_at' => 'Generated date/time',

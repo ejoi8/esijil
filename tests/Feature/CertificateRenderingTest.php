@@ -24,7 +24,7 @@ it('renders certificates with dompdf by default and never invokes the node gener
 
 it('returns a friendly 503 without leaking renderer internals when rendering fails', function () {
     $participant = Participant::factory()->create(['nokp' => '900101015555']);
-    $event = Event::factory()->create(['certificate_type' => 'participation_certificate']);
+    $event = Event::factory()->create();
     $registration = Registration::factory()->for($participant)->for($event)->create();
 
     $this->mock(StoredCertificatePdf::class)
@@ -40,7 +40,7 @@ it('returns a friendly 503 without leaking renderer internals when rendering fai
 
 it('returns a json 503 for api clients without leaking renderer internals', function () {
     $participant = Participant::factory()->create(['nokp' => '900101015555']);
-    $event = Event::factory()->create(['certificate_type' => 'participation_certificate']);
+    $event = Event::factory()->create();
     $registration = Registration::factory()->for($participant)->for($event)->create();
 
     $this->mock(StoredCertificatePdf::class)
