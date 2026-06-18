@@ -9,6 +9,7 @@ use App\Fields\CustomFields;
 use App\Models\CertificateTemplate;
 use App\Models\Registration;
 use App\Settings\CertificateSettings;
+use App\Support\QrCode;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use FontLib\Font;
@@ -115,6 +116,11 @@ class PdfmeCertificateRenderer
             'venue' => (string) ($event->venue ?: '-'),
             'organizer' => (string) ($event->organizer_name ?? ''),
             'reference' => (string) ($registration->cert_serial_number ?: 'Pending serial number'),
+            // A data-URI QR of the public verification page. To print it, add an
+            // `image` field named `verification_qr` to the certificate template.
+            'verification_qr' => $registration->cert_serial_number
+                ? QrCode::dataUri(route('certificate-lookup.verify', ['serial' => $registration->cert_serial_number]))
+                : '',
             'generated_at' => now()->format('d M Y H:i'),
             'certificate_type' => CertificateType::fromMixed($registration->certificate_type)?->value ?? (string) $registration->certificate_type,
             'signature_name' => (string) ($templateSchema['signature_name'] ?? ''),

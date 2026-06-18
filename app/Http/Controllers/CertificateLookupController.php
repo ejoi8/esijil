@@ -72,6 +72,25 @@ class CertificateLookupController extends Controller
         ]);
     }
 
+    /**
+     * Public verification of a single certificate by its serial number (the QR
+     * on the certificate links here). Shows whether the serial maps to a genuine,
+     * issued certificate without requiring the holder's No. KP.
+     */
+    public function verify(string $serial): View
+    {
+        $registration = Registration::query()
+            ->whereNotNull('certificate_type')
+            ->where('cert_serial_number', $serial)
+            ->with(['event', 'participant'])
+            ->first();
+
+        return view('certificate-lookup.verify', [
+            'serial' => $serial,
+            'registration' => $registration,
+        ]);
+    }
+
     public function download(Registration $registration, StoredCertificatePdf $storedCertificatePdf): StreamedResponse
     {
         $registration->loadMissing('certificateTemplate', 'event.certificateTemplate', 'participant');

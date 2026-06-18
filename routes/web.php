@@ -13,6 +13,9 @@ Route::post('/semakan', [CertificateLookupController::class, 'search'])
     ->middleware('throttle:certificate-lookup')
     ->name('certificate-lookup.search');
 Route::get('/semakan/keputusan', [CertificateLookupController::class, 'result'])->name('certificate-lookup.result');
+Route::get('/semakan/sijil/{serial}', [CertificateLookupController::class, 'verify'])
+    ->middleware('throttle:certificate-lookup')
+    ->name('certificate-lookup.verify');
 Route::get('/certificates/{registration}/download', [CertificateLookupController::class, 'download'])
     ->middleware('throttle:certificate-download')
     ->name('certificate-lookup.download');
