@@ -177,6 +177,16 @@ class ManageApplicationSettings extends SettingsPage
                                             ->inline(false),
                                     ])
                                     ->columnSpanFull(),
+                                Section::make('Certificate Notifications')
+                                    ->description('Control certificate emails sent to participants.')
+                                    ->schema([
+                                        Toggle::make('certificate_issued_enabled')
+                                            ->label('Allow certificate emails')
+                                            ->helperText('When enabled, admins can email participants a link to retrieve their certificate (from the Registrations list or an event\'s registrations).')
+                                            ->default(true)
+                                            ->inline(false),
+                                    ])
+                                    ->columnSpanFull(),
                                 Section::make('Notification Tests')
                                     ->description('Available notification test templates.')
                                     ->schema([
@@ -214,12 +224,14 @@ class ManageApplicationSettings extends SettingsPage
         $notificationSettings = app(NotificationSettings::class);
         $notificationSettings->fill(Arr::only($data, [
             'registration_submitted_enabled',
+            'certificate_issued_enabled',
         ]));
         $notificationSettings->save();
 
         return Arr::except($data, [
             'renderer',
             'registration_submitted_enabled',
+            'certificate_issued_enabled',
         ]);
     }
 

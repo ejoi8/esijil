@@ -6,6 +6,7 @@ use App\Enums\AttendanceStatus;
 use App\Enums\CustomFieldEntity;
 use App\Enums\RegistrationSource;
 use App\Fields\CustomFields;
+use App\Filament\Actions\EmailCertificate;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Participant;
 use App\Models\Registration;
@@ -123,6 +124,7 @@ class RegistrationsRelationManager extends RelationManager
             ])
             ->recordActions([
                 ViewAction::make(),
+                EmailCertificate::recordAction(),
                 EditAction::make(),
                 DeleteAction::make(),
                 ForceDeleteAction::make(),
@@ -130,6 +132,7 @@ class RegistrationsRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    EmailCertificate::bulkAction(),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),

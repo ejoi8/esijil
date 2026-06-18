@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Registrations\Tables;
 use App\Enums\CustomFieldEntity;
 use App\Enums\RegistrationSource;
 use App\Fields\CustomFields;
+use App\Filament\Actions\EmailCertificate;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Registration;
 use Filament\Actions\Action;
@@ -91,10 +92,12 @@ class RegistrationsTable
                     ->visible(fn (Registration $record): bool => $record->certificate_type !== null)
                     ->url(fn (Registration $record): string => RegistrationResource::certificateDownloadUrl($record))
                     ->openUrlInNewTab(),
+                EmailCertificate::recordAction(),
                 EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    EmailCertificate::bulkAction(),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
