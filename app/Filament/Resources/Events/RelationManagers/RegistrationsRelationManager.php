@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Events\RelationManagers;
 
 use App\Enums\AttendanceStatus;
 use App\Enums\CustomFieldEntity;
+use App\Enums\EventModule;
 use App\Enums\RegistrationSource;
 use App\Fields\CustomFields;
 use App\Filament\Actions\EmailCertificate;
@@ -12,6 +13,7 @@ use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Participant;
 use App\Models\Registration;
 use App\Services\Certificates\RegistrationCertificateIssuer;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -29,6 +31,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -126,6 +129,13 @@ class RegistrationsRelationManager extends RelationManager
                         'event_id' => $this->getOwnerRecord()->getKey(),
                         'organization_id' => $this->getOwnerRecord()->organization_id,
                     ]),
+                Action::make('qr_sheet')
+                    ->label('QR sheet')
+                    ->icon(Heroicon::OutlinedQrCode)
+                    ->color('gray')
+                    ->visible(fn (): bool => $this->getOwnerRecord()->hasModule(EventModule::Attendance))
+                    ->url(fn (): string => route('auth.events.qr-sheet', $this->getOwnerRecord()))
+                    ->openUrlInNewTab(),
             ])
             ->recordActions([
                 ViewAction::make(),

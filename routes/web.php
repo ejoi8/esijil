@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminRegistrationCertificateDownloadController;
 use App\Http\Controllers\CertificateLookupController;
 use App\Http\Controllers\CustomFieldFileController;
+use App\Http\Controllers\EventQrSheetController;
 use App\Http\Controllers\EventRegistrationController;
 use App\Http\Controllers\ParticipantStatusController;
 use App\Http\Controllers\ScannerController;
@@ -43,6 +44,8 @@ Route::middleware('auth')->group(function (): void {
         ->name('auth.registrations.certificate');
     Route::get('/auth/files/{entity}/{record}/{key}', CustomFieldFileController::class)
         ->name('auth.custom-field-file');
+    Route::get('/auth/qr-sheets/{event}', EventQrSheetController::class)
+        ->name('auth.events.qr-sheet');
 });
 
 if (app()->environment('local')) {
