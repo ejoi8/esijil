@@ -11,7 +11,7 @@ it('shows the certificate lookup page', function () {
     $this->get(route('certificate-lookup.index'))
         ->assertSuccessful()
         ->assertSee('Semakan dan Muat Turun Sijil')
-        ->assertSee('ICT PUSPAINTA @ 2026')
+        ->assertSee('ICT PUSPANITA')
         ->assertSee('Masukkan No. KP')
         ->assertDontSee('Jumlah Rekod');
 });

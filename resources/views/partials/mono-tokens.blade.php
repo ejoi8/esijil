@@ -13,6 +13,8 @@ body{margin:0;background:#fff;color:var(--ink);
 a{color:inherit;text-decoration:none}
 .wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding:0 24px}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:6px}
+.skip{position:absolute;left:-9999px;top:0;z-index:100;background:var(--ink);color:#fff;padding:10px 16px;border-radius:0 0 10px 0;font-size:14px;font-weight:600}
+.skip:focus{left:0}
 
 /* sticky header + brand mark */
 .site-head{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}

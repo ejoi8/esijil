@@ -3,6 +3,9 @@
     'description' => 'Pendaftaran program PUSPANITA melalui pautan jemputan yang dikongsi kepada peserta.',
     'canonical' => null,
     'robots' => 'index,follow',
+    'ogType' => 'website',
+    'ogImage' => '/images/og/esijil-share.svg',
+    'ogImageAlt' => 'eSIJIL PUSPANITA',
 ])
 
 @php
@@ -11,6 +14,9 @@
     $metaDescription = trim((string) $description);
     $metaRobots = trim((string) $robots);
     $metaCanonical = $canonical === false ? null : ($canonical ?: url()->current());
+    $metaUrl = $metaCanonical ?: request()->fullUrl();
+    $metaOgImage = str_starts_with((string) $ogImage, 'http') ? (string) $ogImage : url((string) $ogImage);
+    $metaLocale = str_replace('_', '-', app()->getLocale());
 @endphp
 
 <!DOCTYPE html>
@@ -25,6 +31,19 @@
         @if ($metaCanonical)
             <link rel="canonical" href="{{ $metaCanonical }}">
         @endif
+
+        <meta property="og:locale" content="{{ $metaLocale }}">
+        <meta property="og:site_name" content="{{ $siteName }}">
+        <meta property="og:type" content="{{ $ogType }}">
+        <meta property="og:title" content="{{ $metaTitle }}">
+        <meta property="og:description" content="{{ $metaDescription }}">
+        <meta property="og:url" content="{{ $metaUrl }}">
+        <meta property="og:image" content="{{ $metaOgImage }}">
+        <meta property="og:image:alt" content="{{ $ogImageAlt }}">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $metaTitle }}">
+        <meta name="twitter:description" content="{{ $metaDescription }}">
+        <meta name="twitter:image" content="{{ $metaOgImage }}">
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,6 +91,7 @@
         </style>
     </head>
     <body>
+        <a class="skip" href="#main">Langkau ke kandungan</a>
         <div class="page">
             <header class="site-head">
                 <div class="wrap">
@@ -86,7 +106,7 @@
                 </div>
             </header>
 
-            <main>
+            <main id="main">
                 <div class="wrap">
                     {{ $slot }}
                 </div>

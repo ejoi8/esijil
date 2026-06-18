@@ -1,11 +1,18 @@
-<x-layouts.public
-    title="Sijil tidak dapat dijana"
-    heading="Sijil tidak dapat dijana"
-    description="Maaf, sijil tidak dapat dijana buat masa ini."
-    robots="noindex,nofollow"
+<x-layouts.mono
+    :title="'Sijil tidak dapat dijana'"
+    :description="'Maaf, sijil tidak dapat dijana buat masa ini.'"
+    :robots="'noindex,nofollow'"
+    :canonical="false"
 >
-    <div class="space-y-4 text-sm leading-relaxed text-slate-600">
-        <p>Maaf, sijil anda tidak dapat dijana buat masa ini. Sila cuba sebentar lagi.</p>
-        <p>Jika masalah ini berterusan, sila hubungi pentadbir sistem.</p>
+    <div class="col">
+        <p class="kicker">Ralat</p>
+        <h1>Sijil tidak dapat dijana</h1>
+        <p class="lead">Maaf, sijil anda tidak dapat dijana buat masa ini. Sila cuba sebentar lagi.</p>
+
+        <div class="stack">
+            <section class="card" aria-label="Maklumat ralat">
+                <p class="hint">Jika masalah ini berterusan, sila hubungi pentadbir sistem.</p>
+            </section>
+        </div>
     </div>
-</x-layouts.public>
+</x-layouts.mono>
