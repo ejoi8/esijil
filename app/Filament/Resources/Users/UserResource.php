@@ -20,6 +20,10 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
+    // Users belong to many organizations (via pivot), not one, so they are not
+    // tenant-owned — exclude this resource from Filament's tenant scoping.
+    protected static bool $isScopedToTenant = false;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
     protected static ?string $recordTitleAttribute = 'name';

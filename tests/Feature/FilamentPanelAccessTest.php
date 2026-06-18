@@ -7,12 +7,14 @@ uses(RefreshDatabase::class);
 
 it('allows admins to access the filament auth panel', function () {
     $this->actingAs(User::factory()->create())
+        ->followingRedirects()   // tenancy redirects /auth -> the tenant dashboard
         ->get('/auth')
         ->assertSuccessful();
 });
 
 it('allows staff to access the filament auth panel', function () {
     $this->actingAs(User::factory()->staff()->create())
+        ->followingRedirects()
         ->get('/auth')
         ->assertSuccessful();
 });

@@ -80,12 +80,12 @@ class PdfmeCertificateRenderer
         // Custom fields that opt in via a `cert_var`. Merged first so core
         // variables (participant_name, etc.) can never be overridden.
         $detailVariables = [];
-        foreach (CustomFields::definitions(CustomFieldEntity::Participant) as $field) {
+        foreach (CustomFields::definitions(CustomFieldEntity::Participant, $event) as $field) {
             if ($field->cert_var) {
                 $detailVariables[$field->cert_var] = CustomFields::display($field, data_get($participant->details, $field->key));
             }
         }
-        foreach (CustomFields::definitions(CustomFieldEntity::Event) as $field) {
+        foreach (CustomFields::definitions(CustomFieldEntity::Event, $event) as $field) {
             if ($field->cert_var) {
                 $detailVariables[$field->cert_var] = CustomFields::display($field, data_get($event->details, $field->key));
             }

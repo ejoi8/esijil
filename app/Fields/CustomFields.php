@@ -6,6 +6,7 @@ use App\Enums\CustomFieldEntity;
 use App\Enums\CustomFieldType;
 use App\Models\CustomField;
 use App\Models\Event;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Field;
 use Filament\Forms\Components\FileUpload;
@@ -41,9 +42,14 @@ class CustomFields
     {
         $entityValue = $entity instanceof CustomFieldEntity ? $entity->value : $entity;
 
+        // Scope to the relevant tenant: the event's organization when one is in
+        // context (public form, renderer), otherwise the current admin tenant.
+        $organizationId = $event?->organization_id ?? Filament::getTenant()?->getKey();
+
         $query = CustomField::query()
             ->where('entity', $entityValue)
-            ->where('active', true);
+            ->where('active', true)
+            ->when($organizationId !== null, fn (Builder $inner): Builder => $inner->where('organization_id', $organizationId));
 
         if ($entityValue === CustomFieldEntity::Registration->value && $event !== null) {
             $query->where(fn (Builder $inner): Builder => $inner

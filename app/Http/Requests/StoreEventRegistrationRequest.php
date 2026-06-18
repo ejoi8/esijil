@@ -30,7 +30,7 @@ class StoreEventRegistrationRequest extends FormRequest
                 'nokp' => $this->nokpRules(),
                 'phone' => ['nullable', 'string', 'max:50'],
             ],
-            CustomFields::rules(CustomFieldEntity::Participant, 'public', 'participant_details'),
+            CustomFields::rules(CustomFieldEntity::Participant, 'public', 'participant_details', $this->event()),
             CustomFields::rules(CustomFieldEntity::Registration, 'public', 'registration_details', $this->event()),
         );
     }
@@ -53,7 +53,7 @@ class StoreEventRegistrationRequest extends FormRequest
      */
     public function publicParticipantDetails(): array
     {
-        return $this->collectDetails(CustomFieldEntity::Participant, 'participant_details');
+        return $this->collectDetails(CustomFieldEntity::Participant, 'participant_details', $this->event());
     }
 
     /**

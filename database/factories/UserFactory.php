@@ -3,9 +3,11 @@
 namespace Database\Factories;
 
 use App\Enums\UserRole;
+use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -28,6 +30,11 @@ class UserFactory extends Factory
         return $this->afterCreating(function (User $user): void {
             if ($user->roles()->count() === 0) {
                 $user->assignRole(Role::findOrCreate(UserRole::Admin->value, 'web'));
+            }
+
+            // Join the ambient organization so the user can enter the tenant panel.
+            if (Schema::hasTable('organizations') && ($organization = Organization::query()->first()) !== null) {
+                $user->organizations()->syncWithoutDetaching([$organization->id]);
             }
         });
     }

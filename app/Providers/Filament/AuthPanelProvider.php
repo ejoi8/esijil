@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Models\Organization;
 use Ejoi8\FilamentEmailLogs\FilamentEmailLogsPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -30,6 +31,7 @@ class AuthPanelProvider extends PanelProvider
             ->id('auth')
             ->path('auth')
             ->login()
+            ->tenant(Organization::class)
             ->colors([
                 'primary' => Color::Amber,
             ])

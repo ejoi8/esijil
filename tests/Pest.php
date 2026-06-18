@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\Organization;
+use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
@@ -18,6 +21,15 @@ pest()->extend(TestCase::class)
  // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
     ->beforeEach(function () {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+        // Multi-tenant test context: the migration seeds PUSPANITA as org #1.
+        // Bind it as the active Filament tenant so models auto-fill organization_id
+        // and resource pages resolve a tenant.
+        if (Schema::hasTable('organizations')) {
+            $organization = Organization::query()->first() ?? Organization::factory()->create();
+            Filament::setCurrentPanel(Filament::getPanel('auth'));
+            Filament::setTenant($organization, isQuiet: true);
+        }
     })
     ->in('Feature');
 

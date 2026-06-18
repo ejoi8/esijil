@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\CertificateTemplate;
+use App\Models\Organization;
 use App\Services\Certificates\PdfmeTemplateFactory;
 use Illuminate\Database\Seeder;
 
@@ -21,6 +22,7 @@ class CertificateTemplateSeeder extends Seeder
         $template = CertificateTemplate::query()->updateOrCreate(
             ['key' => 'default'],
             [
+                'organization_id' => Organization::query()->where('slug', 'puspanita')->value('id'),
                 'name' => 'Default Certificate',
                 'schema' => $schema,
                 'is_active' => true,

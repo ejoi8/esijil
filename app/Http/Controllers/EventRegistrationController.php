@@ -48,7 +48,7 @@ class EventRegistrationController extends Controller
         }
 
         [$participant, $registration] = DB::transaction(function () use ($request, $event, $certificateIssuer): array {
-            $participant = $this->resolveParticipant($request);
+            $participant = $this->resolveParticipant($request, $event);
             $registration = $this->resolveRegistration($request, $event, $participant);
 
             $certificateIssuer->issueFor($registration);
@@ -102,7 +102,7 @@ class EventRegistrationController extends Controller
         abort_unless(session('event_registration_success_id') === $registration->id, 403);
     }
 
-    protected function resolveParticipant(StoreEventRegistrationRequest $request): Participant
+    protected function resolveParticipant(StoreEventRegistrationRequest $request, Event $event): Participant
     {
         $participant = Participant::withTrashed()
             ->where('nokp', $request->nokp())
@@ -113,11 +113,11 @@ class EventRegistrationController extends Controller
                 $participant->restore();
             }
 
-            return $this->saveParticipant($participant, $request);
+            return $this->saveParticipant($participant, $request, $event);
         }
 
         try {
-            return $this->saveParticipant(new Participant, $request);
+            return $this->saveParticipant(new Participant, $request, $event);
         } catch (QueryException $exception) {
             if (! $this->isUniqueConstraintViolation($exception)) {
                 throw $exception;
@@ -131,13 +131,14 @@ class EventRegistrationController extends Controller
                 $participant->restore();
             }
 
-            return $this->saveParticipant($participant, $request);
+            return $this->saveParticipant($participant, $request, $event);
         }
     }
 
-    protected function saveParticipant(Participant $participant, StoreEventRegistrationRequest $request): Participant
+    protected function saveParticipant(Participant $participant, StoreEventRegistrationRequest $request, Event $event): Participant
     {
         $participant->fill($request->participantData());
+        $participant->organization_id ??= $event->organization_id;
 
         // Merge (not replace) so admin-only detail fields survive re-registration.
         $details = $request->publicParticipantDetails();
@@ -169,6 +170,7 @@ class EventRegistrationController extends Controller
 
         try {
             return Registration::query()->create([
+                'organization_id' => $event->organization_id,
                 'event_id' => $event->id,
                 'participant_id' => $participant->id,
                 'registered_at' => now(),
