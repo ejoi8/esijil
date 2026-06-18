@@ -11,6 +11,7 @@ use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -115,6 +116,7 @@ class CustomFields
             CustomFieldType::Date => ['date'],
             CustomFieldType::Email => ['string', 'email', 'max:255'],
             CustomFieldType::Select => ['string', 'in:'.implode(',', array_keys($field->options ?? []))],
+            CustomFieldType::Checkbox => $field->required ? ['accepted'] : ['boolean'],
             default => ['string', 'max:255'],
         });
     }
@@ -124,6 +126,10 @@ class CustomFields
      */
     public static function display(CustomField $field, mixed $value): string
     {
+        if ($field->type === CustomFieldType::Checkbox) {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'Ya' : 'Tidak';
+        }
+
         if ($value === null || $value === '') {
             return '';
         }
@@ -152,6 +158,7 @@ class CustomFields
                     CustomFieldType::Number => TextInput::make($name)->numeric(),
                     CustomFieldType::Date => DatePicker::make($name),
                     CustomFieldType::Email => TextInput::make($name)->email()->maxLength(255),
+                    CustomFieldType::Checkbox => Toggle::make($name),
                     default => TextInput::make($name)->maxLength(255),
                 };
 
