@@ -7,6 +7,7 @@ use App\Enums\CustomFieldEntity;
 use App\Enums\RegistrationSource;
 use App\Fields\CustomFields;
 use App\Filament\Actions\EmailCertificate;
+use App\Filament\Imports\ParticipantImporter;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Participant;
 use App\Models\Registration;
@@ -18,6 +19,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\ImportAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
@@ -117,6 +119,13 @@ class RegistrationsRelationManager extends RelationManager
                 CreateAction::make()
                     ->label('Add Registration')
                     ->after(fn (Registration $record): Registration => app(RegistrationCertificateIssuer::class)->issueFor($record)),
+                ImportAction::make()
+                    ->importer(ParticipantImporter::class)
+                    ->label('Import CSV')
+                    ->options(fn (): array => [
+                        'event_id' => $this->getOwnerRecord()->getKey(),
+                        'organization_id' => $this->getOwnerRecord()->organization_id,
+                    ]),
             ])
             ->recordActions([
                 ViewAction::make(),

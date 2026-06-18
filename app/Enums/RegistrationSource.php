@@ -11,6 +11,7 @@ enum RegistrationSource: string implements HasLabel
 
     case PublicForm = 'public_form';
     case Admin = 'admin';
+    case Import = 'import';
     case LegacyImport = 'legacy_import';
 
     public function label(): string
@@ -18,6 +19,7 @@ enum RegistrationSource: string implements HasLabel
         return match ($this) {
             self::PublicForm => 'Public Form',
             self::Admin => 'Admin',
+            self::Import => 'CSV Import',
             self::LegacyImport => 'Legacy Import',
         };
     }
