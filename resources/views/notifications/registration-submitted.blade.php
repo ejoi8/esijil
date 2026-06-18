@@ -45,6 +45,15 @@
         Sila simpan emel ini sebagai rujukan pendaftaran anda.
     </p>
 
+    @if ($event->hasModule(\App\Enums\EventModule::Attendance))
+        <p style="margin: 20px 0;">
+            <a href="{{ route('participant.status', $participant->public_token) }}"
+               style="display:inline-block; padding:10px 18px; background:#111827; color:#ffffff; text-decoration:none; border-radius:6px;">
+                Lihat Pas Kehadiran (Kod QR)
+            </a>
+        </p>
+    @endif
+
     <p>Terima kasih.</p>
 </body>
 </html>

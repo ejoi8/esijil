@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminRegistrationCertificateDownloadController;
 use App\Http\Controllers\CertificateLookupController;
 use App\Http\Controllers\CustomFieldFileController;
 use App\Http\Controllers\EventRegistrationController;
+use App\Http\Controllers\ParticipantStatusController;
 use App\Http\Controllers\ScannerController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +25,9 @@ Route::get('/certificates/{registration}/download', [CertificateLookupController
 
 // Public scanner page — the station token in the URL is the operator's bearer auth.
 Route::get('/scan/{stationToken}', [ScannerController::class, 'show'])->name('scan.show');
+
+// Participant attendance pass — their public_token check-in QR + event status.
+Route::get('/r/{publicToken}', [ParticipantStatusController::class, 'show'])->name('participant.status');
 
 Route::middleware('signed')->group(function (): void {
     Route::get('/events/{event:public_id}/register', [EventRegistrationController::class, 'show'])->name('events.register.show');

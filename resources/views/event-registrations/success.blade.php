@@ -30,6 +30,23 @@
                 </dl>
             </section>
 
+            @if ($registration->event->hasModule(\App\Enums\EventModule::Attendance))
+                <section class="card" aria-label="Kod QR Kehadiran">
+                    <p class="card-title">Kod QR Kehadiran</p>
+                    <p class="hint">Tunjukkan kod ini untuk daftar masuk di kaunter program.</p>
+                    <div style="display:flex;justify-content:center;padding:18px">
+                        <img
+                            src="{{ \App\Support\QrCode::dataUri($registration->participant->public_token) }}"
+                            alt="Kod QR Kehadiran"
+                            style="width:200px;height:200px"
+                        >
+                    </div>
+                    <div style="text-align:center;margin-top:8px">
+                        <a class="btn btn-line" href="{{ route('participant.status', $registration->participant->public_token) }}">Buka Pas Kehadiran</a>
+                    </div>
+                </section>
+            @endif
+
             <section class="card" aria-label="Sijil">
                 <p class="card-title">Sijil</p>
                 <p class="hint">PDF dijana di server setiap kali anda memuat turun sijil ini.</p>
