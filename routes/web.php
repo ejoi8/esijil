@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminRegistrationCertificateDownloadController;
 use App\Http\Controllers\CertificateLookupController;
 use App\Http\Controllers\CustomFieldFileController;
 use App\Http\Controllers\EventRegistrationController;
+use App\Http\Controllers\ScannerController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,9 @@ Route::get('/semakan/sijil/{serial}', [CertificateLookupController::class, 'veri
 Route::get('/certificates/{registration}/download', [CertificateLookupController::class, 'download'])
     ->middleware('throttle:certificate-download')
     ->name('certificate-lookup.download');
+
+// Public scanner page — the station token in the URL is the operator's bearer auth.
+Route::get('/scan/{stationToken}', [ScannerController::class, 'show'])->name('scan.show');
 
 Route::middleware('signed')->group(function (): void {
     Route::get('/events/{event:public_id}/register', [EventRegistrationController::class, 'show'])->name('events.register.show');

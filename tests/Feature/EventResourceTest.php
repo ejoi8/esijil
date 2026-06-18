@@ -8,6 +8,7 @@ use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\RelationManagers\IssuedCertificatesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\RegistrationFieldsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\RegistrationsRelationManager;
+use App\Filament\Resources\Events\RelationManagers\ScannerStationsRelationManager;
 use App\Models\CertificateTemplate;
 use App\Models\Event;
 use App\Models\Registration;
@@ -69,10 +70,12 @@ it('registers relation managers for registrations and issued certificates', func
         RegistrationsRelationManager::class,
         IssuedCertificatesRelationManager::class,
         RegistrationFieldsRelationManager::class,
+        ScannerStationsRelationManager::class,
     ])
         ->and(RegistrationsRelationManager::isLazy())->toBeFalse()
         ->and(IssuedCertificatesRelationManager::isLazy())->toBeFalse()
-        ->and(RegistrationFieldsRelationManager::isLazy())->toBeFalse();
+        ->and(RegistrationFieldsRelationManager::isLazy())->toBeFalse()
+        ->and(ScannerStationsRelationManager::isLazy())->toBeFalse();
 });
 
 it('renders the event edit page with associated data tabs', function () {

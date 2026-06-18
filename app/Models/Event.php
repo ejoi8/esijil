@@ -119,6 +119,11 @@ class Event extends Model
         return in_array($module->value, $this->modules ?? [], true);
     }
 
+    public function scannerStations(): HasMany
+    {
+        return $this->hasMany(ScannerStation::class);
+    }
+
     /**
      * A signed, non-expiring registration URL. The signature keeps the link
      * unguessable + tamper-proof (events are unlisted); whether registration is
