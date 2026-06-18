@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -37,7 +38,7 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         return $panel->getId() === 'auth'
-            && $this->hasAnyRole(['admin', 'staff']);
+            && $this->hasAnyRole(UserRole::values());
     }
 
     public function delete(): ?bool
@@ -54,13 +55,13 @@ class User extends Authenticatable implements FilamentUser
 
     protected function isLastAdministrator(): bool
     {
-        if (! $this->roles()->where('name', 'admin')->exists()) {
+        if (! $this->roles()->where('name', UserRole::Admin->value)->exists()) {
             return false;
         }
 
         return static::query()
             ->whereKeyNot($this->getKey())
-            ->whereHas('roles', fn ($query) => $query->where('name', 'admin'))
+            ->whereHas('roles', fn ($query) => $query->where('name', UserRole::Admin->value))
             ->doesntExist();
     }
 }

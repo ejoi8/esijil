@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use App\Services\Mail\MailSettingsConfigurator;
 use App\Settings\MailSettings;
@@ -34,7 +35,7 @@ class AppServiceProvider extends ServiceProvider
         $this->configureMailSettings();
 
         // The "admin" role is a super-admin: it bypasses every policy check.
-        Gate::before(fn (?User $user, string $ability): ?bool => $user?->hasRole('admin') ? true : null);
+        Gate::before(fn (?User $user, string $ability): ?bool => $user?->hasRole(UserRole::Admin->value) ? true : null);
 
         RateLimiter::for('certificate-lookup', function (Request $request): Limit {
             return Limit::perMinute(5)->by($request->ip().'|'.sha1(Nokp::digits($request->input('nokp'))));

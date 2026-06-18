@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -26,7 +27,7 @@ class UserFactory extends Factory
     {
         return $this->afterCreating(function (User $user): void {
             if ($user->roles()->count() === 0) {
-                $user->assignRole(Role::findOrCreate('admin', 'web'));
+                $user->assignRole(Role::findOrCreate(UserRole::Admin->value, 'web'));
             }
         });
     }
@@ -34,7 +35,7 @@ class UserFactory extends Factory
     public function staff(): static
     {
         return $this->afterCreating(
-            fn (User $user) => $user->syncRoles([Role::findOrCreate('staff', 'web')]),
+            fn (User $user) => $user->syncRoles([Role::findOrCreate(UserRole::Staff->value, 'web')]),
         );
     }
 
