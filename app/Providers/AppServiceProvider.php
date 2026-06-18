@@ -69,6 +69,11 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('certificate-download', function (Request $request): Limit {
             return Limit::perMinute(30)->by($request->ip());
         });
+
+        // Per-station check-in throttle for the scan hot path.
+        RateLimiter::for('scan', function (Request $request): Limit {
+            return Limit::perMinute(120)->by((string) $request->input('station_token'));
+        });
     }
 
     protected function configureMailSettings(): void

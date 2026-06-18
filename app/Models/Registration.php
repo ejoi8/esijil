@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
     'registered_at',
     'attendance_status',
     'checked_in_at',
+    'checked_in_station_id',
     'completed_at',
     'source',
     'remarks',
