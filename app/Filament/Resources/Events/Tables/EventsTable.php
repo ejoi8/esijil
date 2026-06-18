@@ -47,7 +47,6 @@ class EventsTable
                 TextColumn::make('certificate_type')
                     ->label('Certificate Type')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => CertificateType::labelFor($state))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('registrations_count')

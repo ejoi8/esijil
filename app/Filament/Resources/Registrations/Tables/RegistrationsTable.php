@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\Registrations\Tables;
 
-use App\Enums\AttendanceStatus;
-use App\Enums\CertificateType;
 use App\Enums\RegistrationSource;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Registration;
@@ -40,7 +38,6 @@ class RegistrationsTable
                     ->sortable(),
                 TextColumn::make('attendance_status')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => AttendanceStatus::labelFor($state))
                     ->searchable(),
                 TextColumn::make('checked_in_at')
                     ->dateTime('d M Y H:i')
@@ -50,12 +47,11 @@ class RegistrationsTable
                     ->sortable(),
                 TextColumn::make('source')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => RegistrationSource::labelFor($state))
                     ->searchable(),
                 TextColumn::make('certificate_type')
                     ->label('Certificate Type')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => filled($state) ? CertificateType::labelFor($state) : '-')
+                    ->placeholder('-')
                     ->searchable(),
                 TextColumn::make('cert_serial_number')
                     ->label('Certificate Serial')

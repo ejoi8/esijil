@@ -39,7 +39,6 @@ class ParticipantsTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('membership_status')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => MembershipStatus::labelFor($state))
                     ->searchable(),
                 ...self::detailColumns(),
                 TextColumn::make('created_at')

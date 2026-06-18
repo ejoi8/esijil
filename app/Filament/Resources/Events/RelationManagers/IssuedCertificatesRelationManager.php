@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Events\RelationManagers;
 
-use App\Enums\CertificateType;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Registration;
 use Filament\Actions\Action;
@@ -36,7 +35,6 @@ class IssuedCertificatesRelationManager extends RelationManager
                 TextColumn::make('certificate_type')
                     ->label('Certificate Type')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => CertificateType::labelFor($state))
                     ->searchable(),
                 TextColumn::make('certificateTemplate.name')
                     ->label('Certificate Template')

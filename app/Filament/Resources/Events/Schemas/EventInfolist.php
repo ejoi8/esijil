@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
-use App\Enums\CertificateType;
 use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Support\QrCode;
@@ -34,8 +33,7 @@ class EventInfolist
                                 EventStatus::Published => 'success',
                                 EventStatus::Completed => 'warning',
                                 default => 'gray',
-                            })
-                            ->formatStateUsing(fn (mixed $state): string => EventStatus::labelFor($state)),
+                            }),
                         TextEntry::make('registrations_count')
                             ->counts('registrations')
                             ->label('Registrations')
@@ -60,8 +58,7 @@ class EventInfolist
                         TextEntry::make('certificate_type')
                             ->label('Certificate Type')
                             ->badge()
-                            ->color('info')
-                            ->formatStateUsing(fn (mixed $state): string => CertificateType::labelFor($state)),
+                            ->color('info'),
                         TextEntry::make('certificateTemplate.name')
                             ->label('Certificate Template')
                             ->placeholder('No template selected.'),

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Registrations\Schemas;
 
-use App\Enums\CertificateType;
 use App\Models\Registration;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -34,7 +33,6 @@ class RegistrationInfolist
                 TextEntry::make('source'),
                 TextEntry::make('certificate_type')
                     ->label('Certificate Type')
-                    ->formatStateUsing(fn (mixed $state): ?string => CertificateType::fromMixed($state)?->label())
                     ->placeholder('-'),
                 TextEntry::make('certificateTemplate.name')
                     ->label('Certificate Template')

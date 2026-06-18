@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Events\RelationManagers;
 
 use App\Enums\AttendanceStatus;
-use App\Enums\CertificateType;
 use App\Enums\RegistrationSource;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Participant;
@@ -98,16 +97,14 @@ class RegistrationsRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('attendance_status')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => AttendanceStatus::labelFor($state))
                     ->searchable(),
                 TextColumn::make('source')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => RegistrationSource::labelFor($state))
                     ->searchable(),
                 TextColumn::make('certificate_type')
                     ->label('Certificate Type')
                     ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => filled($state) ? CertificateType::labelFor($state) : '-'),
+                    ->placeholder('-'),
                 TextColumn::make('cert_serial_number')
                     ->label('Certificate Serial')
                     ->placeholder('-')
