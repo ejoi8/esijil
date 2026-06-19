@@ -1,7 +1,7 @@
 <?php
 
 use App\Filament\Resources\Events\EventResource;
-use App\Filament\Resources\Users\UserResource;
+use App\Filament\Resources\Members\MemberResource;
 use App\Models\Registration;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
@@ -13,15 +13,15 @@ beforeEach(function () {
     $this->seed(RolesAndPermissionsSeeder::class);
 });
 
-it('lets an admin open the users resource', function () {
+it('lets an admin open the members resource', function () {
     $this->actingAs(User::factory()->create())
-        ->get(UserResource::getUrl('index'))
+        ->get(MemberResource::getUrl('index'))
         ->assertSuccessful();
 });
 
-it('forbids staff from the users resource', function () {
+it('forbids staff from the members resource', function () {
     $this->actingAs(User::factory()->staff()->create())
-        ->get(UserResource::getUrl('index'))
+        ->get(MemberResource::getUrl('index'))
         ->assertForbidden();
 });
 
