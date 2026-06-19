@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Tenancy\EditOrganizationProfile;
 use App\Filament\Pages\Tenancy\RegisterOrganization;
 use App\Models\Organization;
 use Ejoi8\FilamentEmailLogs\FilamentEmailLogsPlugin;
@@ -34,6 +35,7 @@ class AuthPanelProvider extends PanelProvider
             ->login()
             ->tenant(Organization::class)
             ->tenantRegistration(RegisterOrganization::class)
+            ->tenantProfile(EditOrganizationProfile::class)
             ->colors([
                 'primary' => Color::Amber,
             ])

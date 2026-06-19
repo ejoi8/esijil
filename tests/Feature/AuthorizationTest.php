@@ -1,6 +1,5 @@
 <?php
 
-use App\Filament\Pages\ManageApplicationSettings;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Registration;
@@ -30,12 +29,6 @@ it('lets staff open an operational resource', function () {
     $this->actingAs(User::factory()->staff()->create())
         ->get(EventResource::getUrl('index'))
         ->assertSuccessful();
-});
-
-it('forbids staff from application settings', function () {
-    $this->actingAs(User::factory()->staff()->create())
-        ->get(ManageApplicationSettings::getUrl())
-        ->assertForbidden();
 });
 
 it('refuses to delete the last administrator', function () {

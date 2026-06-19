@@ -4,7 +4,7 @@ use App\Filament\Resources\Registrations\Pages\ListRegistrations;
 use App\Models\Registration;
 use App\Models\User;
 use App\Notifications\CertificateIssued;
-use App\Settings\NotificationSettings;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
@@ -37,10 +37,10 @@ it('bulk-emails certificates to the selected participants', function () {
     Notification::assertSentTimes(CertificateIssued::class, 2);
 });
 
-it('hides the email-certificate action when certificate emails are disabled', function () {
+it('hides the email-certificate action when certificate emails are disabled for the organization', function () {
     $this->actingAs(User::factory()->create());
 
-    app(NotificationSettings::class)->fill(['certificate_issued_enabled' => false])->save();
+    Filament::getTenant()->update(['settings' => ['notifications' => ['certificate_issued_enabled' => false]]]);
 
     $registration = Registration::factory()->create();
 

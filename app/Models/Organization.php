@@ -46,4 +46,13 @@ class Organization extends Model
     {
         return $this->hasMany(Event::class);
     }
+
+    /**
+     * A per-organization notification preference, defaulting to enabled when the
+     * organization has not configured it. Stored under settings.notifications.
+     */
+    public function notifies(string $key): bool
+    {
+        return (bool) data_get($this->settings, "notifications.{$key}", true);
+    }
 }

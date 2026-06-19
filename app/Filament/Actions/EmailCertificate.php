@@ -4,9 +4,9 @@ namespace App\Filament\Actions;
 
 use App\Models\Registration;
 use App\Notifications\CertificateIssued;
-use App\Settings\NotificationSettings;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
+use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Collection;
@@ -14,8 +14,8 @@ use Illuminate\Support\Collection;
 /**
  * Admin-triggered "email the participant a link to retrieve their certificate"
  * actions, shared by the Registrations table and the Event registrations
- * relation manager. Gated by the certificate_issued_enabled setting; only
- * registrations that actually have a certificate are emailed.
+ * relation manager. Gated by the organization's certificate_issued_enabled
+ * preference; only registrations that actually have a certificate are emailed.
  */
 class EmailCertificate
 {
@@ -64,6 +64,6 @@ class EmailCertificate
 
     protected static function enabled(): bool
     {
-        return app(NotificationSettings::class)->certificate_issued_enabled;
+        return Filament::getTenant()?->notifies('certificate_issued_enabled') ?? false;
     }
 }

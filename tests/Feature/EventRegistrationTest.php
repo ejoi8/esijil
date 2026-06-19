@@ -6,7 +6,7 @@ use App\Models\Participant;
 use App\Models\Registration;
 use App\Notifications\RegistrationSubmitted;
 use App\Services\Certificates\StoredCertificatePdf;
-use App\Settings\NotificationSettings;
+use Filament\Facades\Filament;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\SendQueuedNotifications;
@@ -204,12 +204,10 @@ it('throttles repeated registration attempts for the same participant', function
         ->assertTooManyRequests();
 });
 
-it('does not send registration confirmation when disabled in application settings', function () {
+it('does not send registration confirmation when disabled for the organization', function () {
     Notification::fake();
 
-    $settings = app(NotificationSettings::class);
-    $settings->registration_submitted_enabled = false;
-    $settings->save();
+    Filament::getTenant()->update(['settings' => ['notifications' => ['registration_submitted_enabled' => false]]]);
 
     $event = Event::factory()->create([
         'status' => EventStatus::Published,

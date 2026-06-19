@@ -12,7 +12,6 @@ use App\Models\Registration;
 use App\Notifications\RegistrationSubmitted;
 use App\Services\Certificates\RegistrationCertificateIssuer;
 use App\Services\Certificates\StoredCertificatePdf;
-use App\Settings\NotificationSettings;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -35,7 +34,6 @@ class EventRegistrationController extends Controller
         StoreEventRegistrationRequest $request,
         Event $event,
         RegistrationCertificateIssuer $certificateIssuer,
-        NotificationSettings $notificationSettings,
     ): RedirectResponse {
         $this->abortUnlessPublished($event);
 
@@ -56,7 +54,7 @@ class EventRegistrationController extends Controller
             return [$participant, $registration];
         });
 
-        if ($registration->wasRecentlyCreated && $notificationSettings->registration_submitted_enabled) {
+        if ($registration->wasRecentlyCreated && ($event->organization?->notifies('registration_submitted_enabled') ?? true)) {
             $participant->notify(new RegistrationSubmitted($registration));
         }
 

@@ -1,13 +1,11 @@
 <?php
 
-namespace App\Filament\Pages;
+namespace App\Filament\Pages\Tenancy;
 
 use App\Models\Registration;
 use App\Notifications\RegistrationSubmitted;
 use App\Services\Mail\MailSettingsConfigurator;
 use App\Settings\MailSettings;
-use App\Settings\NotificationSettings;
-use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
@@ -15,35 +13,28 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
-use Filament\Pages\SettingsPage;
+use Filament\Pages\Tenancy\EditTenantProfile;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Throwable;
 
 /**
- * Per-tenant notification preferences. Platform infrastructure (mail server,
- * certificate renderer) moved to the platform panel's PlatformSettings, since a
- * tenant admin must not change platform-wide config.
+ * Per-organization settings, edited by the organization's own admins. Currently
+ * the notification preferences, stored under the tenant's settings.notifications.
  */
-class ManageApplicationSettings extends SettingsPage
+class EditOrganizationProfile extends EditTenantProfile
 {
-    protected static ?string $title = 'Notification Settings';
+    public static function getLabel(): string
+    {
+        return 'Organization';
+    }
 
-    protected static ?string $navigationLabel = 'Notifications';
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBellAlert;
-
-    protected static string|\UnitEnum|null $navigationGroup = 'Settings';
-
-    protected static ?int $navigationSort = 1;
-
-    protected static string $settings = NotificationSettings::class;
-
-    public static function canAccess(): bool
+    public static function canView(Model $tenant): bool
     {
         return Filament::auth()->user()?->can('settings.manage') ?? false;
     }
@@ -53,7 +44,7 @@ class ManageApplicationSettings extends SettingsPage
         return $schema
             ->components([
                 Section::make('Registration Notifications')
-                    ->description('Control automatic emails sent from the public registration flow.')
+                    ->description('Control automatic emails sent from this organization\'s public registration flow.')
                     ->schema([
                         Toggle::make('registration_submitted_enabled')
                             ->label('Send registration confirmation')
@@ -63,7 +54,7 @@ class ManageApplicationSettings extends SettingsPage
                     ])
                     ->columnSpanFull(),
                 Section::make('Certificate Notifications')
-                    ->description('Control certificate emails sent to participants.')
+                    ->description('Control certificate emails sent to this organization\'s participants.')
                     ->schema([
                         Toggle::make('certificate_issued_enabled')
                             ->label('Allow certificate emails')
@@ -85,6 +76,26 @@ class ManageApplicationSettings extends SettingsPage
                     ])
                     ->columnSpanFull(),
             ]);
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        return [
+            'registration_submitted_enabled' => (bool) data_get($data, 'settings.notifications.registration_submitted_enabled', true),
+            'certificate_issued_enabled' => (bool) data_get($data, 'settings.notifications.certificate_issued_enabled', true),
+        ];
+    }
+
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $settings = $this->tenant->settings ?? [];
+
+        $settings['notifications'] = [
+            'registration_submitted_enabled' => (bool) ($data['registration_submitted_enabled'] ?? true),
+            'certificate_issued_enabled' => (bool) ($data['certificate_issued_enabled'] ?? true),
+        ];
+
+        return ['settings' => $settings];
     }
 
     public function getSendTestNotificationAction(): Action
