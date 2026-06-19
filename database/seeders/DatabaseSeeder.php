@@ -17,6 +17,9 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Admin', 'password' => 'password'],
         );
 
+        // The seeded admin operates the platform (super-admin panel).
+        $admin->forceFill(['is_platform_admin' => true])->save();
+
         $organization = Organization::query()->firstOrCreate(
             ['slug' => 'puspanita'],
             ['name' => 'PUSPANITA Kebangsaan', 'locale' => 'ms', 'status' => 'active'],

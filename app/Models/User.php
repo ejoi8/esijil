@@ -36,14 +36,20 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_platform_admin' => 'boolean',
         ];
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        // Panel access is gated by authentication + tenancy; per-organization
-        // roles (spatie teams) govern what a user may do inside each tenant.
-        return $panel->getId() === 'auth';
+        return match ($panel->getId()) {
+            // Platform (super-admin) panel: global operators only.
+            'platform' => (bool) $this->is_platform_admin,
+            // Tenant panel: any authenticated user; per-organization roles
+            // (spatie teams) govern what they may do inside each tenant.
+            'auth' => true,
+            default => false,
+        };
     }
 
     public function organizations(): BelongsToMany

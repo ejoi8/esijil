@@ -51,6 +51,11 @@ class UserFactory extends Factory
         return $this->afterCreating(fn (User $user) => $user->syncRoles([]));
     }
 
+    public function platformAdmin(): static
+    {
+        return $this->state(fn (): array => ['is_platform_admin' => true]);
+    }
+
     /**
      * Define the model's default state.
      *
