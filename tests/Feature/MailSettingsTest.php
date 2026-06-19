@@ -1,114 +1,48 @@
 <?php
 
-use App\Enums\CertificatePdfRenderer;
 use App\Filament\Pages\ManageApplicationSettings;
-use App\Mail\TestApplicationSettingsMail;
 use App\Models\Registration;
 use App\Models\User;
 use App\Notifications\RegistrationSubmitted;
 use App\Providers\AppServiceProvider;
-use App\Settings\CertificateSettings;
 use App\Settings\MailSettings;
 use App\Settings\NotificationSettings;
 use Filament\Actions\Testing\TestAction;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
-it('saves smtp settings from the filament settings page', function () {
+it('saves notification toggles from the tenant settings page', function () {
     $this->actingAs(User::factory()->create());
 
     Livewire::test(ManageApplicationSettings::class)
         ->fillForm([
-            'mailer' => 'smtp',
-            'scheme' => 'tls',
-            'host' => 'smtp.example.test',
-            'port' => 587,
-            'username' => 'mailer@example.test',
-            'password' => 'secret-password',
-            'from_address' => 'noreply@example.test',
-            'from_name' => 'eSIJIL Mailer',
             'registration_submitted_enabled' => false,
+            'certificate_issued_enabled' => false,
         ])
         ->call('save')
         ->assertHasNoFormErrors();
 
-    $settings = app(MailSettings::class);
+    $settings = app(NotificationSettings::class);
     $settings->refresh();
 
-    expect($settings->mailer)->toBe('smtp')
-        ->and($settings->scheme)->toBe('tls')
-        ->and($settings->host)->toBe('smtp.example.test')
-        ->and($settings->port)->toBe(587)
-        ->and($settings->username)->toBe('mailer@example.test')
-        ->and($settings->password)->toBe('secret-password')
-        ->and($settings->from_address)->toBe('noreply@example.test')
-        ->and($settings->from_name)->toBe('eSIJIL Mailer');
-
-    $notificationSettings = app(NotificationSettings::class);
-    $notificationSettings->refresh();
-
-    expect($notificationSettings->registration_submitted_enabled)->toBeFalse();
+    expect($settings->registration_submitted_enabled)->toBeFalse()
+        ->and($settings->certificate_issued_enabled)->toBeFalse();
 });
 
-it('saves certificate renderer settings from the filament settings page', function () {
-    $this->actingAs(User::factory()->create());
-
-    Livewire::test(ManageApplicationSettings::class)
-        ->fillForm([
-            'renderer' => CertificatePdfRenderer::Pdfme->value,
-        ])
-        ->call('save')
-        ->assertHasNoFormErrors();
-
-    $settings = app(CertificateSettings::class);
-    $settings->refresh();
-
-    expect($settings->renderer)->toBe(CertificatePdfRenderer::Pdfme->value);
-});
-
-it('renders application settings with tabbed sections', function () {
+it('renders the tenant notification settings page', function () {
     $this->actingAs(User::factory()->create());
 
     Livewire::test(ManageApplicationSettings::class)
         ->assertSuccessful()
-        ->assertSee('Application Settings')
-        ->assertSee('Email')
-        ->assertSee('General')
-        ->assertSee('Notifications')
-        ->assertSee('Certificate PDF Renderer')
-        ->assertSee('Send registration confirmation');
+        ->assertSee('Send registration confirmation')
+        ->assertSee('Allow certificate emails');
 });
 
-it('sends a test email from the application settings page', function () {
-    Mail::fake();
-
-    $this->actingAs(User::factory()->create());
-
-    Livewire::test(ManageApplicationSettings::class)
-        ->fillForm([
-            'mailer' => 'smtp',
-            'scheme' => 'tls',
-            'host' => 'smtp.example.test',
-            'port' => 587,
-            'username' => 'mailer@example.test',
-            'password' => 'secret-password',
-            'from_address' => 'noreply@example.test',
-            'from_name' => 'eSIJIL Mailer',
-        ])
-        ->callAction(TestAction::make('sendTestEmail')->schemaComponent('test_email_actions', 'form'), [
-            'recipient' => 'admin@example.test',
-        ])
-        ->assertHasNoFormErrors();
-
-    Mail::assertSent(TestApplicationSettingsMail::class, 'admin@example.test');
-});
-
-it('sends a registration notification test from the application settings page', function () {
+it('sends a registration notification test from the settings page', function () {
     Notification::fake();
 
     $this->actingAs(User::factory()->create());
@@ -131,13 +65,10 @@ it('sends a registration notification test from the application settings page', 
     );
 });
 
-it('exposes the test email action on the application settings page', function () {
+it('exposes the test notification action on the settings page', function () {
     $this->actingAs(User::factory()->create());
 
     Livewire::test(ManageApplicationSettings::class)
-        ->assertActionExists(TestAction::make('sendTestEmail')->schemaComponent('test_email_actions', 'form'))
-        ->assertActionHasLabel(TestAction::make('sendTestEmail')->schemaComponent('test_email_actions', 'form'), 'Send test email')
-        ->assertActionHasIcon(TestAction::make('sendTestEmail')->schemaComponent('test_email_actions', 'form'), Heroicon::OutlinedPaperAirplane)
         ->assertActionExists(TestAction::make('sendTestNotification')->schemaComponent('test_notification_actions', 'form'))
         ->assertActionHasLabel(TestAction::make('sendTestNotification')->schemaComponent('test_notification_actions', 'form'), 'Send test notification')
         ->assertActionHasIcon(TestAction::make('sendTestNotification')->schemaComponent('test_notification_actions', 'form'), Heroicon::OutlinedBellAlert);
