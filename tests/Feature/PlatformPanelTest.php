@@ -33,6 +33,19 @@ it('forbids a non-platform user from the organizations resource', function () {
         ->assertForbidden();
 });
 
+it('lets a platform admin into a tenant they do not belong to', function () {
+    $organization = Organization::factory()->create(['slug' => 'foreign-org']);
+    $admin = User::factory()->platformAdmin()->create();
+    $admin->organizations()->detach();   // not a member of any organization
+
+    expect($admin->canAccessTenant($organization))->toBeTrue();
+
+    $this->actingAs($admin)
+        ->followingRedirects()
+        ->get('/auth/foreign-org')
+        ->assertSuccessful();
+});
+
 it('renders the organization edit form with the at-a-glance panel', function () {
     $organization = Organization::factory()->create(['name' => 'Editable Org']);
 

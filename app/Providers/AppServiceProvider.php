@@ -58,9 +58,9 @@ class AppServiceProvider extends ServiceProvider
             app(PermissionRegistrar::class)->setPermissionsTeamId($event->getTenant()->getKey());
         });
 
-        // The "admin" role bypasses every policy check — within the current
-        // organization (team), once the tenant is set.
-        Gate::before(fn (?User $user, string $ability): ?bool => $user?->hasRole(UserRole::Admin->value) ? true : null);
+        // Platform admins bypass every policy everywhere; the per-organization
+        // "admin" role bypasses within the current organization (team).
+        Gate::before(fn (?User $user, string $ability): ?bool => ($user?->is_platform_admin || $user?->hasRole(UserRole::Admin->value)) ? true : null);
 
         RateLimiter::for('certificate-lookup', function (Request $request): Limit {
             return Limit::perMinute(5)->by($request->ip().'|'.sha1(Nokp::digits($request->input('nokp'))));
