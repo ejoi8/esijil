@@ -24,14 +24,16 @@ use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Throwable;
 
 /**
- * Per-organization settings, edited by the organization's own admins. Currently
- * the notification preferences, stored under the tenant's settings.notifications.
+ * "Your organization's settings", edited by the organization's own admins:
+ * core details (name, language) plus notification preferences. Core fields map
+ * straight to organization columns (handled by EditTenantProfile); the
+ * notification toggles are nested into the settings.notifications JSON.
  */
 class EditOrganizationProfile extends EditTenantProfile
 {
     public static function getLabel(): string
     {
-        return 'Organization';
+        return 'Organization settings';
     }
 
     public static function canView(Model $tenant): bool
@@ -43,6 +45,26 @@ class EditOrganizationProfile extends EditTenantProfile
     {
         return $schema
             ->components([
+                Section::make('Organization')
+                    ->description('Your organization\'s name and language.')
+                    ->icon(Heroicon::OutlinedBuildingOffice2)
+                    ->schema([
+                        TextInput::make('name')
+                            ->required()
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+                        TextInput::make('slug')
+                            ->prefix('/auth/')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText('Your organization URL. Contact the platform operator to change it.'),
+                        Select::make('locale')
+                            ->label('Default language')
+                            ->options(['en' => 'English', 'ms' => 'Bahasa Malaysia'])
+                            ->required(),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
                 Section::make('Registration Notifications')
                     ->description('Control automatic emails sent from this organization\'s public registration flow.')
                     ->schema([
@@ -80,10 +102,10 @@ class EditOrganizationProfile extends EditTenantProfile
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
-        return [
-            'registration_submitted_enabled' => (bool) data_get($data, 'settings.notifications.registration_submitted_enabled', true),
-            'certificate_issued_enabled' => (bool) data_get($data, 'settings.notifications.certificate_issued_enabled', true),
-        ];
+        $data['registration_submitted_enabled'] = (bool) data_get($data, 'settings.notifications.registration_submitted_enabled', true);
+        $data['certificate_issued_enabled'] = (bool) data_get($data, 'settings.notifications.certificate_issued_enabled', true);
+
+        return $data;
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
@@ -95,7 +117,11 @@ class EditOrganizationProfile extends EditTenantProfile
             'certificate_issued_enabled' => (bool) ($data['certificate_issued_enabled'] ?? true),
         ];
 
-        return ['settings' => $settings];
+        $data['settings'] = $settings;
+
+        unset($data['registration_submitted_enabled'], $data['certificate_issued_enabled']);
+
+        return $data;
     }
 
     public function getSendTestNotificationAction(): Action

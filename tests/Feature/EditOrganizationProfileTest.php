@@ -40,6 +40,20 @@ it('saves notification preferences onto the organization', function () {
         ->and($organization->notifies('certificate_issued_enabled'))->toBeFalse();
 });
 
+it('saves the organization name from the profile', function () {
+    $this->actingAs(User::factory()->create());
+    $organization = Filament::getTenant();
+
+    Livewire::test(EditOrganizationProfile::class)
+        ->fillForm(['name' => 'Renamed Organization'])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    $organization->refresh();
+
+    expect($organization->name)->toBe('Renamed Organization');
+});
+
 it('keeps notification preferences isolated per organization', function () {
     $other = Organization::factory()->create();
     $other->update(['settings' => ['notifications' => ['registration_submitted_enabled' => false]]]);
