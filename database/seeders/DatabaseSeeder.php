@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\PermissionRegistrar;
 
 class DatabaseSeeder extends Seeder
 {
@@ -26,5 +28,9 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             CertificateTemplateSeeder::class,
         ]);
+
+        // Make the seeded admin an administrator of PUSPANITA (team-scoped).
+        app(PermissionRegistrar::class)->setPermissionsTeamId($organization->id);
+        $admin->assignRole(UserRole::Admin->value);
     }
 }

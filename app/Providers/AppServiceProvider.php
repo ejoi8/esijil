@@ -12,14 +12,17 @@ use App\Services\Mail\MailSettingsConfigurator;
 use App\Settings\CertificateSettings;
 use App\Settings\MailSettings;
 use App\Support\Nokp;
+use Filament\Events\TenantSet;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\PermissionRegistrar;
 use Throwable;
 
 class AppServiceProvider extends ServiceProvider
@@ -49,7 +52,14 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureMailSettings();
 
-        // The "admin" role is a super-admin: it bypasses every policy check.
+        // Scope spatie permissions to the active Filament tenant (teams) so roles
+        // apply per-organization. Resolved at tenant-set; tests set it directly.
+        Event::listen(TenantSet::class, function (TenantSet $event): void {
+            app(PermissionRegistrar::class)->setPermissionsTeamId($event->getTenant()->getKey());
+        });
+
+        // The "admin" role bypasses every policy check — within the current
+        // organization (team), once the tenant is set.
         Gate::before(fn (?User $user, string $ability): ?bool => $user?->hasRole(UserRole::Admin->value) ? true : null);
 
         RateLimiter::for('certificate-lookup', function (Request $request): Limit {

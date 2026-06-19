@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Authorization\Permissions;
 use App\Enums\UserRole;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -14,7 +13,16 @@ class RolesAndPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $registrar = app(PermissionRegistrar::class);
+        $previousTeamId = $registrar->getPermissionsTeamId();
+
+        $registrar->forgetCachedPermissions();
+
+        // Role + permission definitions are global (team_id null) and shared
+        // across every organization; assignments to users are per-team. Spatie
+        // resolves a role by null-team OR current-team, so global defs are found
+        // when assigning within any team.
+        $registrar->setPermissionsTeamId(null);
 
         foreach (Permissions::all() as $name) {
             Permission::findOrCreate($name, 'web');
@@ -25,8 +33,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 ->syncPermissions(Permissions::forRole($role));
         }
 
-        User::query()->where('email', 'admin@admin.com')->first()?->assignRole(UserRole::Admin->value);
-
-        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        $registrar->forgetCachedPermissions();
+        $registrar->setPermissionsTeamId($previousTeamId);   // don't clobber the caller's team
     }
 }

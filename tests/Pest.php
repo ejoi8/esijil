@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Organization;
+use Database\Seeders\RolesAndPermissionsSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\PermissionRegistrar;
@@ -29,6 +30,11 @@ pest()->extend(TestCase::class)
             $organization = Organization::query()->first() ?? Organization::factory()->create();
             Filament::setCurrentPanel(Filament::getPanel('auth'));
             Filament::setTenant($organization, isQuiet: true);
+            app(PermissionRegistrar::class)->setPermissionsTeamId($organization->getKey());
+
+            // Ensure the global role/permission definitions exist so factory role
+            // assignments resolve them (and assign within the current team).
+            $this->seed(RolesAndPermissionsSeeder::class);
         }
     })
     ->in('Feature');

@@ -41,8 +41,9 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $panel->getId() === 'auth'
-            && $this->hasAnyRole(UserRole::values());
+        // Panel access is gated by authentication + tenancy; per-organization
+        // roles (spatie teams) govern what a user may do inside each tenant.
+        return $panel->getId() === 'auth';
     }
 
     public function organizations(): BelongsToMany

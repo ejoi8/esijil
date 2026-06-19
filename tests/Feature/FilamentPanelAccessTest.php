@@ -19,8 +19,12 @@ it('allows staff to access the filament auth panel', function () {
         ->assertSuccessful();
 });
 
-it('forbids users without a panel role from accessing the filament auth panel', function () {
+it('lets an authenticated member reach the panel (per-organization roles gate features inside)', function () {
+    // Panel access is gated by authentication + tenancy now; a member with no
+    // role reaches the panel but their per-organization role governs what they
+    // can actually do (resource policies still deny).
     $this->actingAs(User::factory()->roleless()->create())
+        ->followingRedirects()
         ->get('/auth')
-        ->assertForbidden();
+        ->assertSuccessful();
 });
