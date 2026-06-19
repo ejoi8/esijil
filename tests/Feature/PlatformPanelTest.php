@@ -32,3 +32,13 @@ it('forbids a non-platform user from the organizations resource', function () {
         ->get('/platform/organizations')
         ->assertForbidden();
 });
+
+it('renders the organization edit form with the at-a-glance panel', function () {
+    $organization = Organization::factory()->create(['name' => 'Editable Org']);
+
+    $this->actingAs(User::factory()->platformAdmin()->create())
+        ->get("/platform/organizations/{$organization->slug}/edit")
+        ->assertOk()
+        ->assertSee('Editable Org')
+        ->assertSee('At a glance');
+});
