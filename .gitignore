@@ -15,6 +15,7 @@
 /node_modules
 /public/build
 /public/hot
+/public/rootCA.pem
 /public/storage
 /storage/*.key
 /storage/pail

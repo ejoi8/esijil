@@ -1,10 +1,12 @@
 <?php
 
+use App\Enums\EventModule;
 use App\Enums\EventStatus;
 use App\Filament\Resources\Events\EventResource;
 use App\Filament\Resources\Events\Pages\CreateEvent;
 use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
+use App\Filament\Resources\Events\Pages\ViewEvent;
 use App\Filament\Resources\Events\RelationManagers\IssuedCertificatesRelationManager;
 use App\Filament\Resources\Events\RelationManagers\RegistrationFieldsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\RegistrationsRelationManager;
@@ -116,6 +118,63 @@ it('shows the signed public registration url on the event edit page for publishe
         ->assertSuccessful()
         ->assertSee('Signed Registration URL')
         ->assertSee($event->publicRegistrationUrl());
+});
+
+it('shows enabled modules and their gated settings on the event view page', function () {
+    $this->actingAs(User::factory()->create());
+
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'modules' => [
+            EventModule::Registration->value,
+            EventModule::Attendance->value,
+            EventModule::Certificate->value,
+        ],
+    ]);
+
+    Livewire::test(ViewEvent::class, ['record' => $event->getRouteKey()])
+        ->assertSuccessful()
+        ->assertSee('Modules & Certificate')
+        ->assertSee('Enabled modules')
+        // The modules array renders as human labels, not raw enum values.
+        ->assertSee('Attendance')
+        // Attendance + Certificate gates open these two settings.
+        ->assertSee('Scan matches by')
+        ->assertSee('Release certificate')
+        ->assertSee('Signed Registration URL');
+});
+
+it('hides attendance-only settings on the view page when the module is off', function () {
+    $this->actingAs(User::factory()->create());
+
+    $event = Event::factory()->create([
+        'modules' => [EventModule::Registration->value, EventModule::Certificate->value],
+    ]);
+
+    Livewire::test(ViewEvent::class, ['record' => $event->getRouteKey()])
+        ->assertSuccessful()
+        ->assertSee('Release certificate')
+        ->assertDontSee('Scan matches by');
+});
+
+it('preserves an assigned certificate template when the certificate module is toggled off', function () {
+    $user = User::factory()->create();
+    $template = CertificateTemplate::factory()->create();
+    $this->actingAs($user);
+
+    $event = Event::factory()->create([
+        'certificate_template_id' => $template->id,
+        'modules' => [EventModule::Registration->value, EventModule::Certificate->value],
+    ]);
+
+    // Turning the Certificate module off hides the template Select; a hidden
+    // field is not dehydrated, so the stored value must survive the save.
+    Livewire::test(EditEvent::class, ['record' => $event->getRouteKey()])
+        ->fillForm(['modules' => [EventModule::Registration->value]])
+        ->call('save')
+        ->assertHasNoFormErrors();
+
+    expect($event->refresh()->certificate_template_id)->toBe($template->id);
 });
 
 it('updates event status from the events table inline select column', function () {

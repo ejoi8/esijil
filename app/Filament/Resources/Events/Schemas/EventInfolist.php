@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
+use App\Enums\CertificateRelease;
 use App\Enums\CustomFieldEntity;
+use App\Enums\EventModule;
 use App\Enums\EventStatus;
+use App\Enums\ScanMatchMode;
 use App\Fields\CustomFields;
 use App\Models\Event;
 use App\Support\QrCode;
@@ -21,8 +24,9 @@ class EventInfolist
         return $schema
             ->columns(12)
             ->components([
+                // 1. Event Details (span 7) — mirrors the form's lead section.
                 Section::make('Event Details')
-                    ->description('Core event details shown to admins and used across registration and certificate flows.')
+                    ->description('Core event details, publication status, and where the event takes place.')
                     ->icon(Heroicon::OutlinedCalendarDays)
                     ->schema([
                         TextEntry::make('title')
@@ -42,34 +46,18 @@ class EventInfolist
                             ->label('Registrations')
                             ->badge()
                             ->color('primary'),
+                        TextEntry::make('description')
+                            ->placeholder('-')
+                            ->columnSpanFull(),
                         TextEntry::make('organizer_name')
                             ->label('Organizer')
                             ->placeholder('-'),
                         TextEntry::make('venue')
-                            ->placeholder('-')
-                            ->columnSpan(2),
-                        TextEntry::make('description')
-                            ->placeholder('No event description provided.')
-                            ->columnSpanFull(),
+                            ->placeholder('-'),
                     ])
-                    ->columns(4)
-                    ->columnSpan(8),
-                Section::make('Additional Details')
-                    ->icon(Heroicon::OutlinedRectangleStack)
-                    ->schema(CustomFields::infolistEntries(CustomFieldEntity::Event))
                     ->columns(2)
-                    ->columnSpanFull()
-                    ->hidden(fn (): bool => CustomFields::definitions(CustomFieldEntity::Event)->isEmpty()),
-                Section::make('Certificate Setup')
-                    ->description('Default certificate behavior for registrations under this event.')
-                    ->icon(Heroicon::OutlinedDocumentCheck)
-                    ->schema([
-                        TextEntry::make('certificateTemplate.name')
-                            ->label('Certificate Template')
-                            ->placeholder('No certificate for this event'),
-                    ])
-                    ->columns(1)
-                    ->columnSpan(4),
+                    ->columnSpan(7),
+                // 2. Schedule (span 5) — same position and width as the form.
                 Section::make('Schedule')
                     ->description('When the event happens and which public-facing time labels are shown.')
                     ->icon(Heroicon::OutlinedClock)
@@ -89,9 +77,46 @@ class EventInfolist
                             ->placeholder('-'),
                     ])
                     ->columns(2)
-                    ->columnSpan(6),
-                Section::make('Registration Access')
-                    ->description('Public registration availability and the signed URL used for participant access.')
+                    ->columnSpan(5),
+                // 3. Additional Details (full) — organization-defined custom fields.
+                Section::make('Additional Details')
+                    ->description('Organization-defined custom fields captured for this event.')
+                    ->icon(Heroicon::OutlinedRectangleStack)
+                    ->schema(CustomFields::infolistEntries(CustomFieldEntity::Event))
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->hidden(fn (): bool => CustomFields::definitions(CustomFieldEntity::Event)->isEmpty()),
+                // 4. Modules & Certificate (span 7) — capabilities (now shown on the view) + their settings.
+                Section::make('Modules & Certificate')
+                    ->description('Capabilities enabled for this event, plus the certificate template, scan matching, and release timing applied to its registrations.')
+                    ->icon(Heroicon::OutlinedRectangleStack)
+                    ->schema([
+                        TextEntry::make('modules')
+                            ->label('Enabled modules')
+                            ->badge()
+                            ->formatStateUsing(fn (mixed $state): string => EventModule::labelFor($state))
+                            ->placeholder('No modules enabled')
+                            ->columnSpanFull(),
+                        TextEntry::make('certificateTemplate.name')
+                            ->label('Certificate Template')
+                            ->placeholder('No certificate for this event')
+                            ->visible(fn (Event $record): bool => in_array(EventModule::Certificate->value, $record->modules ?? [], true)),
+                        TextEntry::make('scan_match_mode')
+                            ->label('Scan matches by')
+                            ->formatStateUsing(fn (mixed $state): ?string => $state === null ? null : ScanMatchMode::fromMixed($state)?->label())
+                            ->placeholder('-')
+                            ->visible(fn (Event $record): bool => in_array(EventModule::Attendance->value, $record->modules ?? [], true)),
+                        TextEntry::make('certificate_release')
+                            ->label('Release certificate')
+                            ->formatStateUsing(fn (mixed $state): ?string => $state === null ? null : CertificateRelease::fromMixed($state)?->label())
+                            ->placeholder('-')
+                            ->visible(fn (Event $record): bool => in_array(EventModule::Certificate->value, $record->modules ?? [], true)),
+                    ])
+                    ->columns(2)
+                    ->columnSpan(7),
+                // 5. Publishing & Access (span 5) — availability, signed URL, QR.
+                Section::make('Publishing & Access')
+                    ->description('Public registration availability and the signed URL and QR used for participant access.')
                     ->icon(Heroicon::OutlinedLink)
                     ->schema([
                         IconEntry::make('registration_open')
@@ -117,8 +142,9 @@ class EventInfolist
                             ->columnSpanFull(),
                     ])
                     ->columns(2)
-                    ->columnSpan(6),
-                Section::make('Audit Trail')
+                    ->columnSpan(5),
+                // 6. Record (full) — ownership and lifecycle timestamps.
+                Section::make('Record')
                     ->description('Record ownership and lifecycle timestamps.')
                     ->icon(Heroicon::OutlinedClipboardDocumentList)
                     ->schema([

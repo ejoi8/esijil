@@ -31,7 +31,7 @@ use Illuminate\Validation\Rules\Unique;
  * Per-event registration questions: CustomField rows with entity = registration
  * scoped to this event (event_id). They appear only on this event's admin and
  * public registration forms. Global registration fields are managed separately
- * in Settings → Custom Fields.
+ * in Settings → Global Custom Fields.
  */
 class RegistrationFieldsRelationManager extends RelationManager
 {
