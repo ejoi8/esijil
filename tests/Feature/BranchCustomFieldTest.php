@@ -1,11 +1,14 @@
 <?php
 
+use App\Enums\CustomFieldEntity;
 use App\Enums\EventStatus;
 use App\Filament\Resources\Participants\Pages\ListParticipants;
 use App\Models\CustomField;
 use App\Models\Event;
+use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -62,6 +65,39 @@ it('rejects a branch value outside the dropdown options', function () {
         'nokp' => '900101015555',
         'participant_details' => ['branch' => 'Atlantis', 'membership_status' => 'member'],
     ])->assertSessionHasErrors('participant_details.branch');
+});
+
+it('does not leak another organization\'s participant fields onto the public registration form', function () {
+    // Org #1 (PUSPANITA, created by the org backfill migration) owns the seeded
+    // "Cawangan" participant field. A second org defines its own public field —
+    // the public form, scoped to the event's organization, must not show it.
+    $puspanita = Organization::query()->where('slug', 'puspanita')->firstOrFail();
+
+    $otherOrg = Organization::factory()->create();
+    CustomField::factory()
+        ->forEntity(CustomFieldEntity::Participant)
+        ->publicForm()
+        ->create([
+            'organization_id' => $otherOrg->id,
+            'key' => 'other_org_field',
+            'label' => 'OtherOrgSecretField',
+        ]);
+
+    $event = Event::factory()->create([
+        'organization_id' => $puspanita->id,
+        'status' => EventStatus::Published,
+        'registration_open' => true,
+    ]);
+
+    // The public registration route runs with no Filament tenant (unlike the admin
+    // panel). Clear the tenant the test harness sets so this faithfully reproduces
+    // production — otherwise the leak is masked by falling back to the test tenant.
+    Filament::setTenant(null);
+
+    $this->get($event->publicRegistrationUrl())
+        ->assertSuccessful()
+        ->assertSee('Cawangan')                 // the event org's own field renders
+        ->assertDontSee('OtherOrgSecretField'); // a different org's field must not leak
 });
 
 it('filters participants by branch using the JSON select filter', function () {

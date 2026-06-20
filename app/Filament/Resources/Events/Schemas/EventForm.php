@@ -32,6 +32,7 @@ class EventForm
         return $schema
             ->columns(12)
             ->components([
+                // 1. Event Details (lg:7) — identity, status, and where it happens.
                 Section::make('Event Details')
                     ->icon(Heroicon::OutlinedCalendarDays)
                     ->compact()
@@ -42,6 +43,14 @@ class EventForm
                             ->placeholder('Seminar Integriti Kebangsaan')
                             ->autofocus()
                             ->columnSpanFull(),
+                        Select::make('status')
+                            ->options(EventStatus::options())
+                            ->formatStateUsing(fn (mixed $state): ?string => EventStatus::fromMixed($state)?->value)
+                            ->default(EventStatus::Draft->value)
+                            ->live()
+                            ->required()
+                            ->helperText('Draft: hidden · Published: link active · Completed: ended.')
+                            ->columnSpanFull(),
                         Textarea::make('description')
                             ->rows(3)
                             ->placeholder('Shown on the public registration page.')
@@ -50,18 +59,14 @@ class EventForm
                             ->required()
                             ->default('PUSPANITA Kebangsaan')
                             ->maxLength(255),
-                        Select::make('created_by')
-                            ->relationship('creator', 'name')
-                            ->label('Created By')
-                            ->default(fn (): ?int => auth()->id())
-                            ->searchable()
-                            ->preload()
-                            ->disabled()
-                            ->dehydrated(),
+                        TextInput::make('venue')
+                            ->maxLength(255)
+                            ->placeholder('Dewan Serbaguna PUSPANITA'),
                     ])
                     ->columns(2)
                     ->columnSpan(['default' => 'full', 'lg' => 7])
                     ->extraAttributes(['class' => 'h-full']),
+                // 2. Schedule (lg:5) — a clean time-only grid.
                 Section::make('Schedule')
                     ->icon(Heroicon::OutlinedClock)
                     ->compact()
@@ -78,14 +83,11 @@ class EventForm
                             ->label('Display end time')
                             ->maxLength(255)
                             ->placeholder('5:00 PM'),
-                        TextInput::make('venue')
-                            ->maxLength(255)
-                            ->placeholder('Dewan Serbaguna PUSPANITA')
-                            ->columnSpanFull(),
                     ])
                     ->columns(2)
                     ->columnSpan(['default' => 'full', 'lg' => 5])
                     ->extraAttributes(['class' => 'h-full']),
+                // 3. Additional Details (full) — organization-defined custom fields.
                 Section::make('Additional Details')
                     ->icon(Heroicon::OutlinedRectangleStack)
                     ->compact()
@@ -93,22 +95,8 @@ class EventForm
                     ->columns(2)
                     ->columnSpanFull()
                     ->hidden(fn (): bool => CustomFields::definitions(CustomFieldEntity::Event)->isEmpty()),
-                Section::make('Certificate Setup')
-                    ->icon(Heroicon::OutlinedDocumentCheck)
-                    ->compact()
-                    ->schema([
-                        Select::make('certificate_template_id')
-                            ->label('Certificate Template')
-                            ->relationship('certificateTemplate', 'name')
-                            ->searchable()
-                            ->preload()
-                            ->placeholder('No certificate for this event')
-                            ->helperText('Assign a template to issue certificates for this event; leave empty to issue none.'),
-                    ])
-                    ->columns(2)
-                    ->columnSpan(['default' => 'full', 'lg' => 7])
-                    ->extraAttributes(['class' => 'h-full']),
-                Section::make('Modules')
+                // 4. Modules & Certificate (lg:7) — capabilities and the settings they gate.
+                Section::make('Modules & Certificate')
                     ->icon(Heroicon::OutlinedRectangleStack)
                     ->compact()
                     ->schema([
@@ -118,6 +106,14 @@ class EventForm
                             ->live()
                             ->helperText('Which capabilities this event uses — any combination.')
                             ->columnSpanFull(),
+                        Select::make('certificate_template_id')
+                            ->label('Certificate Template')
+                            ->relationship('certificateTemplate', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->placeholder('No certificate for this event')
+                            ->helperText('Assign a template to issue certificates for this event; leave empty to issue none.')
+                            ->visible(fn (Get $get): bool => in_array(EventModule::Certificate->value, $get('modules') ?? [], true)),
                         Select::make('scan_match_mode')
                             ->label('Scan matches by')
                             ->options(ScanMatchMode::options())
@@ -132,19 +128,13 @@ class EventForm
                             ->visible(fn (Get $get): bool => in_array(EventModule::Certificate->value, $get('modules') ?? [], true)),
                     ])
                     ->columns(2)
-                    ->columnSpanFull(),
-                Section::make('Registration Access')
+                    ->columnSpan(['default' => 'full', 'lg' => 7])
+                    ->extraAttributes(['class' => 'h-full']),
+                // 5. Publishing & Access (lg:5) — availability and the signed link / QR.
+                Section::make('Publishing & Access')
                     ->icon(Heroicon::OutlinedLink)
                     ->compact()
                     ->schema([
-                        Select::make('status')
-                            ->options(EventStatus::options())
-                            ->formatStateUsing(fn (mixed $state): ?string => EventStatus::fromMixed($state)?->value)
-                            ->default(EventStatus::Draft->value)
-                            ->live()
-                            ->required()
-                            ->helperText('Draft: hidden · Published: link active · Completed: ended.')
-                            ->columnSpanFull(),
                         Toggle::make('registration_open')
                             ->label('Registration open')
                             ->helperText('Off: public page shows a closed message and rejects sign-ups.')
@@ -188,6 +178,22 @@ class EventForm
                     ->columns(2)
                     ->columnSpan(['default' => 'full', 'lg' => 5])
                     ->extraAttributes(['class' => 'h-full']),
+                // 6. Record (full) — ownership; created_at/updated_at are read-only on the view.
+                Section::make('Record')
+                    ->icon(Heroicon::OutlinedClipboardDocumentList)
+                    ->compact()
+                    ->schema([
+                        Select::make('created_by')
+                            ->relationship('creator', 'name')
+                            ->label('Created By')
+                            ->default(fn (): ?int => auth()->id())
+                            ->searchable()
+                            ->preload()
+                            ->disabled()
+                            ->dehydrated(),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
             ]);
     }
 

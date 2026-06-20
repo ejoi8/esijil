@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CustomFields\Schemas;
 use App\Enums\CustomFieldEntity;
 use App\Enums\CustomFieldScope;
 use App\Enums\CustomFieldType;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
@@ -53,6 +54,7 @@ class CustomFieldForm
                             ->unique(
                                 ignoreRecord: true,
                                 modifyRuleUsing: fn (Unique $rule, Get $get): Unique => $rule
+                                    ->where('organization_id', Filament::getTenant()?->getKey())
                                     ->where('entity', $get('entity'))
                                     ->whereNull('event_id'),
                             )

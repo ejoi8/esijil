@@ -23,6 +23,12 @@ class CustomFieldResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'label';
 
+    protected static ?string $modelLabel = 'Global Custom Field';
+
+    protected static ?string $pluralModelLabel = 'Global Custom Fields';
+
+    protected static ?string $navigationLabel = 'Global Custom Fields';
+
     protected static string|\UnitEnum|null $navigationGroup = 'Settings';
 
     protected static ?int $navigationSort = 2;

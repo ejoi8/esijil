@@ -121,7 +121,7 @@
                         @error('phone')<p class="err">{{ $message }}</p>@enderror
                     </div>
 
-                    @foreach (\App\Fields\CustomFields::publicDefinitions(\App\Enums\CustomFieldEntity::Participant) as $field)
+                    @foreach (\App\Fields\CustomFields::publicDefinitions(\App\Enums\CustomFieldEntity::Participant, $event) as $field)
                         @include('event-registrations._custom-field', ['field' => $field, 'prefix' => 'participant_details'])
                     @endforeach
 
