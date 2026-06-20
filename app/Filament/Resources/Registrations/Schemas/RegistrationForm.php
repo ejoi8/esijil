@@ -2,11 +2,17 @@
 
 namespace App\Filament\Resources\Registrations\Schemas;
 
+use App\Enums\AttendanceStatus;
+use App\Enums\CustomFieldEntity;
+use App\Enums\RegistrationSource;
+use App\Fields\CustomFields;
+use App\Models\Event;
 use App\Models\Participant;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class RegistrationForm
@@ -21,6 +27,7 @@ class RegistrationForm
                             ->relationship('event', 'title')
                             ->searchable()
                             ->preload()
+                            ->live()
                             ->required(),
                         Select::make('participant_id')
                             ->relationship('participant', 'full_name')
@@ -31,26 +38,29 @@ class RegistrationForm
                         DateTimePicker::make('registered_at')
                             ->required(),
                         Select::make('attendance_status')
-                            ->options([
-                                'registered' => 'Registered',
-                                'attended' => 'Attended',
-                                'no_show' => 'No-show',
-                            ])
+                            ->options(AttendanceStatus::options())
                             ->required(),
                         DateTimePicker::make('checked_in_at'),
                         DateTimePicker::make('completed_at'),
                         Select::make('source')
-                            ->options([
-                                'legacy_import' => 'Legacy Import',
-                                'public_form' => 'Public Form',
-                                'admin' => 'Admin',
-                            ])
+                            ->options(RegistrationSource::options())
                             ->required(),
                         Textarea::make('remarks')
                             ->columnSpanFull(),
                     ])
                     ->columnSpanFull()
                     ->columns(2),
+                Section::make('Additional Details')
+                    ->schema(fn (Get $get): array => CustomFields::formComponents(
+                        CustomFieldEntity::Registration,
+                        filled($get('event_id')) ? Event::find($get('event_id')) : null,
+                    ))
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->hidden(fn (Get $get): bool => CustomFields::definitions(
+                        CustomFieldEntity::Registration,
+                        filled($get('event_id')) ? Event::find($get('event_id')) : null,
+                    )->isEmpty()),
             ]);
     }
 }

@@ -19,7 +19,7 @@ class ViewRegistration extends ViewRecord
                 ->label('Download PDF')
                 ->icon(Heroicon::OutlinedArrowDownTray)
                 ->color('primary')
-                ->visible(fn (): bool => $this->record->certificate_type !== null)
+                ->visible(fn (): bool => $this->record->certificate_template_id !== null)
                 ->url(fn (): string => RegistrationResource::certificateDownloadUrl($this->record))
                 ->openUrlInNewTab(),
             EditAction::make(),

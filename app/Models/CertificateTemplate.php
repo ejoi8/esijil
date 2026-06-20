@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use App\Enums\CertificateType;
+use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\CertificateTemplateFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,9 +12,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 #[Fillable([
+    'organization_id',
     'name',
     'key',
-    'type',
     'schema',
     'pdfme_template',
     'is_active',
@@ -23,7 +22,7 @@ use Illuminate\Support\Str;
 class CertificateTemplate extends Model
 {
     /** @use HasFactory<CertificateTemplateFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToOrganization, HasFactory, SoftDeletes;
 
     public const DEFAULT_SCHEMA = [
         'header' => '',
@@ -68,7 +67,6 @@ class CertificateTemplate extends Model
     protected function casts(): array
     {
         return [
-            'type' => CertificateType::class,
             'schema' => 'array',
             'pdfme_template' => 'array',
             'is_active' => 'boolean',
@@ -82,13 +80,7 @@ class CertificateTemplate extends Model
 
     public function issuedCertificates(): HasMany
     {
-        return $this->hasMany(Registration::class, 'certificate_template_id')
-            ->whereNotNull('certificate_type');
-    }
-
-    public function scopeForDocumentType(Builder $query, CertificateType $documentType): Builder
-    {
-        return $query->where('type', $documentType->value);
+        return $this->hasMany(Registration::class, 'certificate_template_id');
     }
 
     public static function keyFor(mixed $templateId): ?string
@@ -100,18 +92,6 @@ class CertificateTemplate extends Model
         return static::query()
             ->whereKey($templateId)
             ->value('key');
-    }
-
-    public static function matchesDocumentType(mixed $templateId, CertificateType $documentType): bool
-    {
-        if (blank($templateId)) {
-            return false;
-        }
-
-        return static::query()
-            ->whereKey($templateId)
-            ->forDocumentType($documentType)
-            ->exists();
     }
 
     public function resolvedSchema(): array

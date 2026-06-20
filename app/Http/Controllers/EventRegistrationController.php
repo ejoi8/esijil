@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AttendanceStatus;
 use App\Enums\EventStatus;
+use App\Enums\RegistrationSource;
 use App\Http\Requests\StoreEventRegistrationRequest;
 use App\Models\Event;
 use App\Models\Participant;
@@ -10,7 +12,6 @@ use App\Models\Registration;
 use App\Notifications\RegistrationSubmitted;
 use App\Services\Certificates\RegistrationCertificateIssuer;
 use App\Services\Certificates\StoredCertificatePdf;
-use App\Settings\NotificationSettings;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
@@ -33,7 +34,6 @@ class EventRegistrationController extends Controller
         StoreEventRegistrationRequest $request,
         Event $event,
         RegistrationCertificateIssuer $certificateIssuer,
-        NotificationSettings $notificationSettings,
     ): RedirectResponse {
         $this->abortUnlessPublished($event);
 
@@ -46,15 +46,15 @@ class EventRegistrationController extends Controller
         }
 
         [$participant, $registration] = DB::transaction(function () use ($request, $event, $certificateIssuer): array {
-            $participant = $this->resolveParticipant($request);
-            $registration = $this->resolveRegistration($event, $participant);
+            $participant = $this->resolveParticipant($request, $event);
+            $registration = $this->resolveRegistration($request, $event, $participant);
 
             $certificateIssuer->issueFor($registration);
 
             return [$participant, $registration];
         });
 
-        if ($registration->wasRecentlyCreated && $notificationSettings->registration_submitted_enabled) {
+        if ($registration->wasRecentlyCreated && ($event->organization?->notifies('registration_submitted_enabled') ?? true)) {
             $participant->notify(new RegistrationSubmitted($registration));
         }
 
@@ -80,7 +80,7 @@ class EventRegistrationController extends Controller
     {
         $this->abortUnlessAuthorizedRegistrationSession($registration);
 
-        abort_unless($registration->certificate_type !== null, 404);
+        abort_unless($registration->certificate_template_id !== null, 404);
 
         return $storedCertificatePdf->download($registration);
     }
@@ -92,17 +92,7 @@ class EventRegistrationController extends Controller
 
     protected function registrationIsOpen(Event $event): bool
     {
-        $now = now();
-
-        if ($event->registration_opens_at !== null && $now->lt($event->registration_opens_at)) {
-            return false;
-        }
-
-        if ($event->registration_closes_at !== null && $now->gt($event->registration_closes_at)) {
-            return false;
-        }
-
-        return true;
+        return (bool) $event->registration_open;
     }
 
     protected function abortUnlessAuthorizedRegistrationSession(Registration $registration): void
@@ -110,7 +100,7 @@ class EventRegistrationController extends Controller
         abort_unless(session('event_registration_success_id') === $registration->id, 403);
     }
 
-    protected function resolveParticipant(StoreEventRegistrationRequest $request): Participant
+    protected function resolveParticipant(StoreEventRegistrationRequest $request, Event $event): Participant
     {
         $participant = Participant::withTrashed()
             ->where('nokp', $request->nokp())
@@ -121,14 +111,11 @@ class EventRegistrationController extends Controller
                 $participant->restore();
             }
 
-            $participant->fill($request->participantData());
-            $participant->save();
-
-            return $participant;
+            return $this->saveParticipant($participant, $request, $event);
         }
 
         try {
-            return Participant::query()->create($request->participantData());
+            return $this->saveParticipant(new Participant, $request, $event);
         } catch (QueryException $exception) {
             if (! $this->isUniqueConstraintViolation($exception)) {
                 throw $exception;
@@ -142,15 +129,30 @@ class EventRegistrationController extends Controller
                 $participant->restore();
             }
 
-            $participant->fill($request->participantData());
-            $participant->save();
-
-            return $participant;
+            return $this->saveParticipant($participant, $request, $event);
         }
     }
 
-    protected function resolveRegistration(Event $event, Participant $participant): Registration
+    protected function saveParticipant(Participant $participant, StoreEventRegistrationRequest $request, Event $event): Participant
     {
+        $participant->fill($request->participantData());
+        $participant->organization_id ??= $event->organization_id;
+
+        // Merge (not replace) so admin-only detail fields survive re-registration.
+        $details = $request->publicParticipantDetails();
+        if ($details !== []) {
+            $participant->details = array_merge($participant->details ?? [], $details);
+        }
+
+        $participant->save();
+
+        return $participant;
+    }
+
+    protected function resolveRegistration(StoreEventRegistrationRequest $request, Event $event, Participant $participant): Registration
+    {
+        $details = $request->publicRegistrationDetails();
+
         $registration = Registration::withTrashed()
             ->where('event_id', $event->id)
             ->where('participant_id', $participant->id)
@@ -161,16 +163,18 @@ class EventRegistrationController extends Controller
                 $registration->restore();
             }
 
-            return $registration;
+            return $this->applyRegistrationDetails($registration, $details);
         }
 
         try {
             return Registration::query()->create([
+                'organization_id' => $event->organization_id,
                 'event_id' => $event->id,
                 'participant_id' => $participant->id,
                 'registered_at' => now(),
-                'attendance_status' => 'registered',
-                'source' => 'public_form',
+                'attendance_status' => AttendanceStatus::Registered->value,
+                'source' => RegistrationSource::PublicForm->value,
+                'details' => $details !== [] ? $details : null,
             ]);
         } catch (QueryException $exception) {
             if (! $this->isUniqueConstraintViolation($exception)) {
@@ -186,8 +190,24 @@ class EventRegistrationController extends Controller
                 $registration->restore();
             }
 
-            return $registration;
+            return $this->applyRegistrationDetails($registration, $details);
         }
+    }
+
+    /**
+     * Merge (not replace) submitted registration custom fields, so admin-only
+     * detail fields survive a re-registration.
+     *
+     * @param  array<string, mixed>  $details
+     */
+    protected function applyRegistrationDetails(Registration $registration, array $details): Registration
+    {
+        if ($details !== []) {
+            $registration->details = array_merge($registration->details ?? [], $details);
+            $registration->save();
+        }
+
+        return $registration;
     }
 
     protected function isUniqueConstraintViolation(QueryException $exception): bool

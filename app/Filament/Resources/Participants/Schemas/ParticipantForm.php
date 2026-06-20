@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Participants\Schemas;
 
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
+use App\Enums\CustomFieldEntity;
+use App\Fields\CustomFields;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -31,19 +31,7 @@ class ParticipantForm
                         TextInput::make('phone')
                             ->tel()
                             ->maxLength(255),
-                        Select::make('branch_id')
-                            ->label('Branch')
-                            ->relationship('branch', 'name')
-                            ->searchable()
-                            ->preload(),
-                        Select::make('membership_status')
-                            ->options([
-                                'member' => 'Member',
-                                'non_member' => 'Non-member',
-                            ])
-                            ->required(),
-                        Textarea::make('membership_notes')
-                            ->columnSpanFull(),
+                        ...CustomFields::formComponents(CustomFieldEntity::Participant),
                     ])
                     ->columnSpanFull()
                     ->columns(2),

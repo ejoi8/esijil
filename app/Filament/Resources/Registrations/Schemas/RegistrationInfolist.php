@@ -2,7 +2,8 @@
 
 namespace App\Filament\Resources\Registrations\Schemas;
 
-use App\Enums\CertificateType;
+use App\Enums\CustomFieldEntity;
+use App\Fields\CustomFields;
 use App\Models\Registration;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -32,10 +33,6 @@ class RegistrationInfolist
                     ->dateTime()
                     ->placeholder('-'),
                 TextEntry::make('source'),
-                TextEntry::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->formatStateUsing(fn (mixed $state): ?string => CertificateType::fromMixed($state)?->label())
-                    ->placeholder('-'),
                 TextEntry::make('certificateTemplate.name')
                     ->label('Certificate Template')
                     ->placeholder('-'),
@@ -49,6 +46,7 @@ class RegistrationInfolist
                 TextEntry::make('remarks')
                     ->placeholder('-')
                     ->columnSpanFull(),
+                ...CustomFields::infolistEntries(CustomFieldEntity::Registration),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

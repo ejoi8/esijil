@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Participants\Schemas;
 
+use App\Enums\CustomFieldEntity;
+use App\Fields\CustomFields;
 use App\Models\Participant;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
@@ -18,16 +20,10 @@ class ParticipantInfolist
                 TextEntry::make('nokp'),
                 TextEntry::make('phone')
                     ->placeholder('-'),
-                TextEntry::make('branch.name')
-                    ->label('Branch')
-                    ->placeholder('-'),
-                TextEntry::make('membership_status'),
                 TextEntry::make('registrations_count')
                     ->counts('registrations')
                     ->label('Registrations'),
-                TextEntry::make('membership_notes')
-                    ->placeholder('-')
-                    ->columnSpanFull(),
+                ...CustomFields::infolistEntries(CustomFieldEntity::Participant),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\CertificateType;
 use App\Models\CertificateTemplate;
 use App\Services\Certificates\PdfmeTemplateFactory;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -40,10 +39,7 @@ class CertificateTemplateFactory extends Factory
      */
     public function definition(): array
     {
-        $type = fake()->randomElement(CertificateType::cases());
         $schema = array_replace(CertificateTemplate::DEFAULT_SCHEMA, [
-            'title' => $type->documentTitle(),
-            'body_intro' => $type->bodyIntro(),
             'signature_name' => 'Setiausaha Agung',
             'signature_title' => 'PUSPANITA Kebangsaan',
         ]);
@@ -51,7 +47,6 @@ class CertificateTemplateFactory extends Factory
         return [
             'name' => fake()->unique()->words(3, true),
             'key' => fake()->unique()->slug(3),
-            'type' => $type,
             'schema' => $schema,
             'is_active' => true,
         ];

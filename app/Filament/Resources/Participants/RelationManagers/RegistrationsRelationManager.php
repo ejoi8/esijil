@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Participants\RelationManagers;
 
-use App\Enums\CertificateType;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Registration;
 use Filament\Actions\Action;
@@ -40,10 +39,6 @@ class RegistrationsRelationManager extends RelationManager
                     ->badge(),
                 TextColumn::make('source')
                     ->badge(),
-                TextColumn::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => filled($state) ? CertificateType::labelFor($state) : '-'),
                 TextColumn::make('cert_serial_number')
                     ->label('Certificate Serial')
                     ->placeholder('-')
@@ -57,7 +52,7 @@ class RegistrationsRelationManager extends RelationManager
                     ->label('Download PDF')
                     ->icon(Heroicon::OutlinedArrowDownTray)
                     ->color('primary')
-                    ->visible(fn (Registration $record): bool => $record->certificate_type !== null)
+                    ->visible(fn (Registration $record): bool => $record->certificate_template_id !== null)
                     ->url(fn (Registration $record): string => RegistrationResource::certificateDownloadUrl($record))
                     ->openUrlInNewTab(),
                 EditAction::make()

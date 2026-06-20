@@ -27,9 +27,6 @@ class CertificateTemplatesTable
                     ->sortable(),
                 TextColumn::make('key')
                     ->searchable(),
-                TextColumn::make('type')
-                    ->badge()
-                    ->sortable(),
                 IconColumn::make('is_active')
                     ->boolean(),
                 TextColumn::make('events_count')
@@ -44,9 +41,13 @@ class CertificateTemplatesTable
                     ->dateTime('d M Y H:i')
                     ->sortable(),
             ])
+            ->defaultSort('name')
             ->filters([
                 TrashedFilter::make(),
             ])
+            // This resource uses the full-page Designer as its record screen
+            // (instead of a View/Edit page), so the row actions below
+            // intentionally diverge from the View→Edit convention.
             ->recordUrl(fn ($record): string => CertificateTemplateResource::getUrl('designer', ['record' => $record]))
             ->recordActions([
                 ReplicateAction::make('duplicate')

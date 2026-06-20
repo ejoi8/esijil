@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Participants\Tables;
 
+use App\Enums\CustomFieldEntity;
+use App\Fields\CustomFields;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -9,7 +11,6 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
@@ -31,14 +32,7 @@ class ParticipantsTable
                     ->searchable(),
                 TextColumn::make('phone')
                     ->searchable(),
-                TextColumn::make('branch.name')
-                    ->label('Branch')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('membership_status')
-                    ->badge()
-                    ->formatStateUsing(fn (string $state): string => str($state)->replace('_', ' ')->title())
-                    ->searchable(),
+                ...CustomFields::tableColumns(CustomFieldEntity::Participant),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -54,12 +48,7 @@ class ParticipantsTable
             ])
             ->defaultSort('full_name')
             ->filters([
-                SelectFilter::make('membership_status')
-                    ->label('Membership Status')
-                    ->options([
-                        'member' => 'Member',
-                        'non_member' => 'Non Member',
-                    ]),
+                ...CustomFields::tableFilters(CustomFieldEntity::Participant),
                 TrashedFilter::make(),
             ])
             ->recordActions([

@@ -2,7 +2,6 @@
 
 use App\Settings\CertificateSettings;
 use App\Settings\MailSettings;
-use App\Settings\NotificationSettings;
 use Spatie\LaravelData\Data;
 use Spatie\LaravelSettings\SettingsCasts\DataCast;
 use Spatie\LaravelSettings\SettingsCasts\DateTimeInterfaceCast;
@@ -19,7 +18,6 @@ return [
     'settings' => [
         CertificateSettings::class,
         MailSettings::class,
-        NotificationSettings::class,
     ],
 
     /*

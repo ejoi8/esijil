@@ -2,23 +2,28 @@
 
 namespace App\Filament\Resources\Events\Schemas;
 
-use App\Enums\CertificateType;
+use App\Enums\CertificateRelease;
+use App\Enums\CustomFieldEntity;
+use App\Enums\EventModule;
 use App\Enums\EventStatus;
-use App\Models\CertificateTemplate;
+use App\Enums\ScanMatchMode;
+use App\Fields\CustomFields;
 use App\Models\Event;
-use Closure;
+use App\Support\QrCode;
+use Filament\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Image;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\HtmlString;
 
 class EventForm
 {
@@ -28,26 +33,23 @@ class EventForm
             ->columns(12)
             ->components([
                 Section::make('Event Details')
-                    ->description('Core information shown on the public registration form and certificate records.')
                     ->icon(Heroicon::OutlinedCalendarDays)
+                    ->compact()
                     ->schema([
                         TextInput::make('title')
                             ->required()
                             ->maxLength(255)
                             ->placeholder('Seminar Integriti Kebangsaan')
+                            ->autofocus()
                             ->columnSpanFull(),
                         Textarea::make('description')
-                            ->rows(4)
+                            ->rows(3)
+                            ->placeholder('Shown on the public registration page.')
                             ->columnSpanFull(),
                         TextInput::make('organizer_name')
                             ->required()
                             ->default('PUSPANITA Kebangsaan')
                             ->maxLength(255),
-                        Select::make('status')
-                            ->options(EventStatus::options())
-                            ->formatStateUsing(fn (mixed $state): ?string => EventStatus::fromMixed($state)?->value)
-                            ->default(EventStatus::Draft->value)
-                            ->required(),
                         Select::make('created_by')
                             ->relationship('creator', 'name')
                             ->label('Created By')
@@ -55,140 +57,133 @@ class EventForm
                             ->searchable()
                             ->preload()
                             ->disabled()
-                            ->dehydrated()
-                            ->helperText('Captured from the current admin session.'),
+                            ->dehydrated(),
                     ])
                     ->columns(2)
                     ->columnSpan(['default' => 'full', 'lg' => 7])
                     ->extraAttributes(['class' => 'h-full']),
                 Section::make('Schedule')
-                    ->description('Set when and where the event takes place.')
                     ->icon(Heroicon::OutlinedClock)
+                    ->compact()
                     ->schema([
                         DateTimePicker::make('starts_at')
                             ->required(),
                         DateTimePicker::make('ends_at')
                             ->afterOrEqual('starts_at'),
                         TextInput::make('start_time_text')
+                            ->label('Display start time')
                             ->maxLength(255)
-                            ->helperText('Optional public-facing start time label.'),
+                            ->placeholder('8:00 AM'),
                         TextInput::make('end_time_text')
+                            ->label('Display end time')
                             ->maxLength(255)
-                            ->helperText('Optional public-facing end time label.'),
+                            ->placeholder('5:00 PM'),
                         TextInput::make('venue')
                             ->maxLength(255)
+                            ->placeholder('Dewan Serbaguna PUSPANITA')
                             ->columnSpanFull(),
                     ])
                     ->columns(2)
                     ->columnSpan(['default' => 'full', 'lg' => 5])
                     ->extraAttributes(['class' => 'h-full']),
-                Section::make('Issued Certificate Settings')
-                    ->description('Choose the certificate type and template issued for successful registrations.')
+                Section::make('Additional Details')
                     ->icon(Heroicon::OutlinedRectangleStack)
+                    ->compact()
+                    ->schema(CustomFields::formComponents(CustomFieldEntity::Event))
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->hidden(fn (): bool => CustomFields::definitions(CustomFieldEntity::Event)->isEmpty()),
+                Section::make('Certificate Setup')
+                    ->icon(Heroicon::OutlinedDocumentCheck)
+                    ->compact()
                     ->schema([
-                        Select::make('certificate_type')
-                            ->label('Certificate Type')
-                            ->options(CertificateType::options())
-                            ->formatStateUsing(fn (mixed $state): ?string => CertificateType::fromMixed($state)?->value)
-                            ->default(CertificateType::ParticipationCertificate->value)
-                            ->live()
-                            ->afterStateUpdated(function (Set $set): void {
-                                $set('certificate_template_id', null);
-                                $set('template_key', null);
-                            })
-                            ->required(),
                         Select::make('certificate_template_id')
-                            ->label('Default Certificate Template')
-                            ->relationship(
-                                'certificateTemplate',
-                                'name',
-                                modifyQueryUsing: function (Builder $query, Get $get): Builder {
-                                    $selectedType = CertificateType::fromMixed($get('certificate_type'));
-
-                                    if ($selectedType === null) {
-                                        return $query->whereKey([]);
-                                    }
-
-                                    return $query->forDocumentType($selectedType);
-                                },
-                            )
+                            ->label('Certificate Template')
+                            ->relationship('certificateTemplate', 'name')
                             ->searchable()
                             ->preload()
-                            ->live()
-                            ->disabled(fn (Get $get): bool => blank($get('certificate_type')))
-                            ->helperText('Only templates matching the selected certificate type are available.')
-                            ->afterStateUpdated(function (Set $set, ?string $state): void {
-                                $set('template_key', CertificateTemplate::keyFor($state));
-                            })
-                            ->rule(function (Get $get): Closure {
-                                return function (string $attribute, mixed $value, Closure $fail) use ($get): void {
-                                    if (blank($value)) {
-                                        return;
-                                    }
-
-                                    $selectedType = CertificateType::fromMixed($get('certificate_type'));
-
-                                    if ($selectedType === null) {
-                                        $fail('Select a certificate type before choosing a template.');
-
-                                        return;
-                                    }
-
-                                    $matchesSelectedType = CertificateTemplate::matchesDocumentType($value, $selectedType);
-
-                                    if (! $matchesSelectedType) {
-                                        $fail('The selected template must match the selected certificate type.');
-                                    }
-                                };
-                            })
-                            ->required(),
-                        TextInput::make('template_key')
-                            ->label('Template Key')
-                            ->maxLength(255)
-                            ->readOnly()
-                            ->helperText('Filled automatically from the selected template.'),
+                            ->placeholder('No certificate for this event')
+                            ->helperText('Assign a template to issue certificates for this event; leave empty to issue none.'),
                     ])
                     ->columns(2)
                     ->columnSpan(['default' => 'full', 'lg' => 7])
                     ->extraAttributes(['class' => 'h-full']),
-                Section::make('Registration Access')
-                    ->description('Control the registration window and share the signed URL only after the event is ready for public registration.')
-                    ->icon(Heroicon::OutlinedLink)
+                Section::make('Modules')
+                    ->icon(Heroicon::OutlinedRectangleStack)
+                    ->compact()
                     ->schema([
-                        DateTimePicker::make('registration_opens_at'),
-                        DateTimePicker::make('registration_closes_at')
-                            ->afterOrEqual('registration_opens_at')
-                            ->helperText('Must be after the registration opening date and time.'),
+                        CheckboxList::make('modules')
+                            ->options(EventModule::options())
+                            ->default([EventModule::Registration->value, EventModule::Certificate->value])
+                            ->live()
+                            ->helperText('Which capabilities this event uses — any combination.')
+                            ->columnSpanFull(),
+                        Select::make('scan_match_mode')
+                            ->label('Scan matches by')
+                            ->options(ScanMatchMode::options())
+                            ->formatStateUsing(fn (mixed $state): ?string => ScanMatchMode::fromMixed($state)?->value)
+                            ->default(ScanMatchMode::Token->value)
+                            ->visible(fn (Get $get): bool => in_array(EventModule::Attendance->value, $get('modules') ?? [], true)),
+                        Select::make('certificate_release')
+                            ->label('Release certificate')
+                            ->options(CertificateRelease::options())
+                            ->formatStateUsing(fn (mixed $state): ?string => CertificateRelease::fromMixed($state)?->value)
+                            ->default(CertificateRelease::Immediate->value)
+                            ->visible(fn (Get $get): bool => in_array(EventModule::Certificate->value, $get('modules') ?? [], true)),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
+                Section::make('Registration Access')
+                    ->icon(Heroicon::OutlinedLink)
+                    ->compact()
+                    ->schema([
+                        Select::make('status')
+                            ->options(EventStatus::options())
+                            ->formatStateUsing(fn (mixed $state): ?string => EventStatus::fromMixed($state)?->value)
+                            ->default(EventStatus::Draft->value)
+                            ->live()
+                            ->required()
+                            ->helperText('Draft: hidden · Published: link active · Completed: ended.')
+                            ->columnSpanFull(),
+                        Toggle::make('registration_open')
+                            ->label('Registration open')
+                            ->helperText('Off: public page shows a closed message and rejects sign-ups.')
+                            ->columnSpanFull(),
                         TextEntry::make('public_registration_guidance')
                             ->hiddenLabel()
                             ->state(function (?Event $record, Get $get): string {
                                 if ($record === null) {
-                                    return 'Save the event first. After that, this page will show the signed registration URL that you can share directly with participants.';
+                                    return 'Save the event to generate its registration link.';
                                 }
 
                                 if (EventStatus::fromMixed($get('status') ?? $record->status) !== EventStatus::Published) {
-                                    return 'Publish the event to activate the signed registration URL. The link is not intended to be publicly listed.';
+                                    return 'Publish the event to activate the registration link.';
                                 }
 
-                                return 'Share this signed URL directly with participants. It expires 24 hours after the event finishes.';
-                            }),
+                                return 'Share this link, or use the toggle to open / close sign-ups.';
+                            })
+                            ->columnSpanFull(),
                         TextEntry::make('public_registration_url')
                             ->label('Signed Registration URL')
                             ->state(fn (?Event $record): string => $record?->publicRegistrationUrl() ?? '-')
                             ->copyable()
                             ->visible(fn (?Event $record, Get $get): bool => $record !== null && EventStatus::fromMixed($get('status') ?? $record->status) === EventStatus::Published)
                             ->columnSpanFull(),
-                        Image::make(
-                            fn (?Event $record): string => $record === null ? '' : static::registrationQrCodeUrl($record),
-                            'Signed registration QR code',
-                        )
-                            ->imageSize(220)
+                        Actions::make([
+                            Action::make('view_qr')
+                                ->label('View QR code')
+                                ->icon(Heroicon::OutlinedQrCode)
+                                ->color('gray')
+                                ->modalHeading('Registration QR code')
+                                ->modalDescription('Scan to open the signed registration link.')
+                                ->modalContent(fn (Event $record): HtmlString => new HtmlString(
+                                    '<div style="display:flex;justify-content:center;padding:1rem"><img src="'.e(static::registrationQrCodeUrl($record)).'" alt="Registration QR code" style="width:240px;height:240px"></div>'
+                                ))
+                                ->modalSubmitAction(false)
+                                ->modalCancelActionLabel('Close'),
+                        ])
                             ->visible(fn (?Event $record, Get $get): bool => $record !== null && EventStatus::fromMixed($get('status') ?? $record->status) === EventStatus::Published)
                             ->columnSpanFull(),
-                        TextEntry::make('registration_link_expires_at')
-                            ->label('Link Expires At')
-                            ->state(fn (?Event $record): string => $record?->registrationLinkExpiresAt()->format('d M Y H:i') ?? '-')
-                            ->visible(fn (?Event $record, Get $get): bool => $record !== null && EventStatus::fromMixed($get('status') ?? $record->status) === EventStatus::Published),
                     ])
                     ->columns(2)
                     ->columnSpan(['default' => 'full', 'lg' => 5])
@@ -198,6 +193,8 @@ class EventForm
 
     protected static function registrationQrCodeUrl(Event $event): string
     {
-        return 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='.rawurlencode($event->publicRegistrationUrl());
+        // Generated locally so the signed registration URL (which carries an
+        // HMAC signature) is never sent to a third-party QR service.
+        return QrCode::dataUri($event->publicRegistrationUrl());
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\CertificateTemplates\Pages;
 
-use App\Enums\CertificateType;
 use App\Filament\Resources\CertificateTemplates\CertificateTemplateResource;
 use App\Models\CertificateTemplate;
 use App\Services\Certificates\PdfmeFontRegistry;
@@ -37,14 +36,23 @@ class Designer extends Page
      */
     public array $defaultTemplateData = [];
 
+    public static function canAccess(array $parameters = []): bool
+    {
+        return auth()->user()?->can('certificateTemplate.update') ?? false;
+    }
+
     public function mount(int|string $record): void
     {
+        abort_unless(static::canAccess(), 403);
+
         $this->record = $this->resolveRecord($record);
         $this->refreshTemplateData();
     }
 
     public function saveDesigner(string $template): void
     {
+        abort_unless(auth()->user()?->can('certificateTemplate.update') ?? false, 403);
+
         try {
             $decodedTemplate = json_decode($template, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
@@ -136,8 +144,8 @@ class Designer extends Page
      */
     protected function shouldUseSavedLayoutAsDefault(CertificateTemplate $certificateTemplate, array $currentTemplate): bool
     {
-        return $certificateTemplate->key === CertificateType::ParticipationCertificate->templateKey()
-            && $currentTemplate !== [];
+        // Once a template has a saved layout, prefer it as the designer baseline.
+        return $currentTemplate !== [];
     }
 
     protected function legacyAssetInliner(): PdfmeTemplateLegacyAssetInliner

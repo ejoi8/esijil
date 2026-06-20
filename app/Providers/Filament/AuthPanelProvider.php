@@ -2,6 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Tenancy\EditOrganizationProfile;
+use App\Filament\Pages\Tenancy\RegisterOrganization;
+use App\Models\Organization;
 use Ejoi8\FilamentEmailLogs\FilamentEmailLogsPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -13,8 +16,7 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
-use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Access\Authorizable;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -31,6 +33,9 @@ class AuthPanelProvider extends PanelProvider
             ->id('auth')
             ->path('auth')
             ->login()
+            ->tenant(Organization::class)
+            ->tenantRegistration(RegisterOrganization::class)
+            ->tenantProfile(EditOrganizationProfile::class)
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -48,11 +53,10 @@ class AuthPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
-                // FilamentInfoWidget::class,
             ])
             ->plugin(
                 FilamentEmailLogsPlugin::make()
-                    ->authorizeUsing(fn (Authenticatable $user): bool => true)
+                    ->authorizeUsing(fn (Authorizable $user): bool => $user->can('emailLog.view'))
                     ->navigationGroup('Settings')
                     ->navigationSort(2)
             )

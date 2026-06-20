@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\Registrations\Tables;
 
-use App\Enums\CertificateType;
+use App\Enums\CustomFieldEntity;
+use App\Enums\RegistrationSource;
+use App\Fields\CustomFields;
+use App\Filament\Actions\EmailCertificate;
 use App\Filament\Resources\Registrations\RegistrationResource;
 use App\Models\Registration;
 use Filament\Actions\Action;
@@ -48,11 +51,7 @@ class RegistrationsTable
                 TextColumn::make('source')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('certificate_type')
-                    ->label('Certificate Type')
-                    ->badge()
-                    ->formatStateUsing(fn (mixed $state): string => filled($state) ? CertificateType::labelFor($state) : '-')
-                    ->searchable(),
+                ...CustomFields::tableColumns(CustomFieldEntity::Registration),
                 TextColumn::make('cert_serial_number')
                     ->label('Certificate Serial')
                     ->searchable(),
@@ -75,11 +74,8 @@ class RegistrationsTable
             ->defaultSort('registered_at', 'desc')
             ->filters([
                 SelectFilter::make('source')
-                    ->options([
-                        'legacy_import' => 'Legacy Import',
-                        'public_form' => 'Public Form',
-                        'admin' => 'Admin',
-                    ]),
+                    ->options(RegistrationSource::options()),
+                ...CustomFields::tableFilters(CustomFieldEntity::Registration),
                 TrashedFilter::make(),
             ])
             ->recordActions([
@@ -88,13 +84,15 @@ class RegistrationsTable
                     ->label('Download PDF')
                     ->icon(Heroicon::OutlinedArrowDownTray)
                     ->color('primary')
-                    ->visible(fn (Registration $record): bool => $record->certificate_type !== null)
+                    ->visible(fn (Registration $record): bool => $record->certificate_template_id !== null)
                     ->url(fn (Registration $record): string => RegistrationResource::certificateDownloadUrl($record))
                     ->openUrlInNewTab(),
+                EmailCertificate::recordAction(),
                 EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    EmailCertificate::bulkAction(),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),

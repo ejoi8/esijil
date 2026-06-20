@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\AttendanceStatus;
+use App\Enums\RegistrationSource;
 use App\Models\Event;
 use App\Models\Participant;
 use App\Models\Registration;
@@ -17,7 +19,7 @@ class RegistrationFactory extends Factory
     public function configure(): static
     {
         return $this->afterCreating(function (Registration $registration): void {
-            if ($registration->certificate_type !== null) {
+            if ($registration->certificate_template_id !== null) {
                 return;
             }
 
@@ -39,11 +41,18 @@ class RegistrationFactory extends Factory
             'event_id' => Event::factory(),
             'participant_id' => Participant::factory(),
             'registered_at' => $registeredAt,
-            'attendance_status' => fake()->randomElement(['registered', 'attended', 'no_show']),
+            'attendance_status' => AttendanceStatus::Registered->value,
             'checked_in_at' => fake()->optional()->dateTimeBetween($registeredAt, 'now'),
             'completed_at' => fake()->optional()->dateTimeBetween($registeredAt, 'now'),
-            'source' => fake()->randomElement(['public_form', 'admin']),
+            'source' => RegistrationSource::PublicForm->value,
             'remarks' => fake()->optional()->sentence(),
         ];
+    }
+
+    public function source(RegistrationSource|string $source): static
+    {
+        return $this->state(fn (): array => [
+            'source' => $source instanceof RegistrationSource ? $source->value : $source,
+        ]);
     }
 }

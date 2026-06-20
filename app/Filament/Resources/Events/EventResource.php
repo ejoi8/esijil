@@ -7,7 +7,9 @@ use App\Filament\Resources\Events\Pages\EditEvent;
 use App\Filament\Resources\Events\Pages\ListEvents;
 use App\Filament\Resources\Events\Pages\ViewEvent;
 use App\Filament\Resources\Events\RelationManagers\IssuedCertificatesRelationManager;
+use App\Filament\Resources\Events\RelationManagers\RegistrationFieldsRelationManager;
 use App\Filament\Resources\Events\RelationManagers\RegistrationsRelationManager;
+use App\Filament\Resources\Events\RelationManagers\ScannerStationsRelationManager;
 use App\Filament\Resources\Events\Schemas\EventForm;
 use App\Filament\Resources\Events\Schemas\EventInfolist;
 use App\Filament\Resources\Events\Tables\EventsTable;
@@ -52,6 +54,8 @@ class EventResource extends Resource
         return [
             RegistrationsRelationManager::class,
             IssuedCertificatesRelationManager::class,
+            RegistrationFieldsRelationManager::class,
+            ScannerStationsRelationManager::class,
         ];
     }
 

@@ -16,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class RegistrationResource extends Resource
@@ -41,6 +42,20 @@ class RegistrationResource extends Resource
     public static function table(Table $table): Table
     {
         return RegistrationsTable::configure($table);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with(['event', 'participant']);
+    }
+
+    public static function getRecordTitle(?Model $record): ?string
+    {
+        if (! $record instanceof Registration) {
+            return null;
+        }
+
+        return trim(($record->participant?->full_name ?? 'Registration').' — '.($record->event?->title ?? ''), ' —');
     }
 
     public static function getRelations(): array

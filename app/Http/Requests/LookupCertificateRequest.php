@@ -2,31 +2,33 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\NormalizesNokp;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LookupCertificateRequest extends FormRequest
 {
+    use NormalizesNokp;
+
     public function authorize(): bool
     {
         return true;
     }
 
+    /**
+     * @return array<string, list<string>>
+     */
     public function rules(): array
     {
         return [
-            'nokp' => ['required', 'string', 'max:20'],
+            'nokp' => $this->nokpRules(),
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
-        return [
-            'nokp.required' => 'No. KP is required.',
-        ];
-    }
-
-    public function nokp(): string
-    {
-        return preg_replace('/\D+/', '', (string) $this->input('nokp'));
+        return $this->nokpMessages();
     }
 }

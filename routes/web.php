@@ -2,7 +2,11 @@
 
 use App\Http\Controllers\AdminRegistrationCertificateDownloadController;
 use App\Http\Controllers\CertificateLookupController;
+use App\Http\Controllers\CustomFieldFileController;
+use App\Http\Controllers\EventQrSheetController;
 use App\Http\Controllers\EventRegistrationController;
+use App\Http\Controllers\ParticipantStatusController;
+use App\Http\Controllers\ScannerController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -13,12 +17,22 @@ Route::post('/semakan', [CertificateLookupController::class, 'search'])
     ->middleware('throttle:certificate-lookup')
     ->name('certificate-lookup.search');
 Route::get('/semakan/keputusan', [CertificateLookupController::class, 'result'])->name('certificate-lookup.result');
+Route::get('/semakan/sijil/{serial}', [CertificateLookupController::class, 'verify'])
+    ->middleware('throttle:certificate-lookup')
+    ->name('certificate-lookup.verify');
 Route::get('/certificates/{registration}/download', [CertificateLookupController::class, 'download'])
+    ->middleware('throttle:certificate-download')
     ->name('certificate-lookup.download');
 
+// Public scanner page — the station token in the URL is the operator's bearer auth.
+Route::get('/scan/{stationToken}', [ScannerController::class, 'show'])->name('scan.show');
+
+// Participant attendance pass — their public_token check-in QR + event status.
+Route::get('/r/{publicToken}', [ParticipantStatusController::class, 'show'])->name('participant.status');
+
 Route::middleware('signed')->group(function (): void {
-    Route::get('/events/{event}/register', [EventRegistrationController::class, 'show'])->name('events.register.show');
-    Route::post('/events/{event}/register', [EventRegistrationController::class, 'store'])
+    Route::get('/events/{event:public_id}/register', [EventRegistrationController::class, 'show'])->name('events.register.show');
+    Route::post('/events/{event:public_id}/register', [EventRegistrationController::class, 'store'])
         ->middleware('throttle:event-registration')
         ->name('events.register.store');
 });
@@ -28,6 +42,10 @@ Route::get('/registrations/{registration}/certificate', [EventRegistrationContro
 Route::middleware('auth')->group(function (): void {
     Route::get('/auth/registrations/{registration}/certificate', AdminRegistrationCertificateDownloadController::class)
         ->name('auth.registrations.certificate');
+    Route::get('/auth/files/{entity}/{record}/{key}', CustomFieldFileController::class)
+        ->name('auth.custom-field-file');
+    Route::get('/auth/qr-sheets/{event}', EventQrSheetController::class)
+        ->name('auth.events.qr-sheet');
 });
 
 if (app()->environment('local')) {
@@ -48,7 +66,7 @@ if (app()->environment('local')) {
         Auth::login($user);
         session()->regenerate();
 
-        return redirect("/auth/profile#{$user->id}");
+        return redirect('/auth');
     });
 
     Route::get('/dev-logout', function () {

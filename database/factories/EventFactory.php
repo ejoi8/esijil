@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Enums\CertificateType;
 use App\Enums\EventStatus;
 use App\Models\CertificateTemplate;
 use App\Models\Event;
@@ -24,7 +23,6 @@ class EventFactory extends Factory
     {
         $startsAt = Carbon::instance(fake()->dateTimeBetween('+1 day', '+3 months'));
         $endsAt = (clone $startsAt)->addHours(fake()->numberBetween(2, 8));
-        $certificateType = fake()->randomElement(CertificateType::cases());
 
         return [
             'legacy_id' => null,
@@ -36,14 +34,10 @@ class EventFactory extends Factory
             'end_time_text' => $endsAt->format('g:i A'),
             'venue' => fake()->address(),
             'organizer_name' => 'PUSPANITA Kebangsaan',
-            'registration_opens_at' => (clone $startsAt)->subWeeks(2),
-            'registration_closes_at' => (clone $startsAt)->subDay(),
+            'registration_open' => false,
             'status' => fake()->randomElement(EventStatus::cases()),
-            'certificate_type' => $certificateType,
-            'template_key' => $certificateType->templateKey(),
-            'certificate_template_id' => CertificateTemplate::factory()->state([
-                'type' => $certificateType,
-            ]),
+            'certificate_template_id' => CertificateTemplate::factory(),
+            'modules' => ['registration', 'certificate'],
             'created_by' => User::factory(),
         ];
     }
