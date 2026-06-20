@@ -12,10 +12,13 @@ use App\Services\Mail\MailSettingsConfigurator;
 use App\Settings\CertificateSettings;
 use App\Settings\MailSettings;
 use App\Support\Nokp;
+use Ejoi8\FilamentEmailLogs\Support\EmailLogTenancy;
 use Filament\Events\TenantSet;
+use Filament\Facades\Filament;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -54,8 +57,31 @@ class AppServiceProvider extends ServiceProvider
 
         // Scope spatie permissions to the active Filament tenant (teams) so roles
         // apply per-organization. Resolved at tenant-set; tests set it directly.
+        // Also stash the tenant key in Context so it rides along into queued jobs
+        // (notification mail is queued and runs in a worker without a Filament
+        // tenant) — the email-logs resolver below reads it back there.
         Event::listen(TenantSet::class, function (TenantSet $event): void {
-            app(PermissionRegistrar::class)->setPermissionsTeamId($event->getTenant()->getKey());
+            $tenantId = $event->getTenant()->getKey();
+
+            app(PermissionRegistrar::class)->setPermissionsTeamId($tenantId);
+            Context::add('email_log_tenant_id', $tenantId);
+        });
+
+        // Tell filament-email-logs which tenant owns a logged email: the active
+        // Filament tenant for synchronous sends, falling back to the Context value
+        // captured at dispatch time for mail sent from a queue worker. getTenant()
+        // can throw when no panel is bound (i.e. in the worker), so it is guarded
+        // rather than relying on null-coalescing, which would not catch a throw.
+        EmailLogTenancy::resolveUsing(function (): int|string|null {
+            try {
+                if ($tenant = Filament::getTenant()) {
+                    return $tenant->getKey();
+                }
+            } catch (Throwable) {
+                // No panel/tenant bound (queue worker, CLI) — fall through.
+            }
+
+            return Context::get('email_log_tenant_id');
         });
 
         // Platform admins bypass every policy everywhere; the per-organization

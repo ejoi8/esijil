@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Registration;
+use App\Notifications\Concerns\StampsEmailLogTenant;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -11,6 +12,7 @@ use Illuminate\Notifications\Notification;
 class CertificateIssued extends Notification implements ShouldQueue
 {
     use Queueable;
+    use StampsEmailLogTenant;
 
     public int $tries = 3;
 
@@ -41,14 +43,17 @@ class CertificateIssued extends Notification implements ShouldQueue
 
         $event = $this->registration->event;
 
-        return (new MailMessage)
-            ->subject("Sijil anda telah tersedia: {$event->title}")
-            ->view('notifications.certificate-issued', [
-                'event' => $event,
-                'participant' => $this->registration->participant,
-                'registration' => $this->registration,
-                'lookupUrl' => route('certificate-lookup.index'),
-            ]);
+        return $this->stampEmailLogTenant(
+            (new MailMessage)
+                ->subject("Sijil anda telah tersedia: {$event->title}")
+                ->view('notifications.certificate-issued', [
+                    'event' => $event,
+                    'participant' => $this->registration->participant,
+                    'registration' => $this->registration,
+                    'lookupUrl' => route('certificate-lookup.index'),
+                ]),
+            $this->registration->organization_id,
+        );
     }
 
     /**

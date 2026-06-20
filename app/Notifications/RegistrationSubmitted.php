@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Registration;
+use App\Notifications\Concerns\StampsEmailLogTenant;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -11,6 +12,7 @@ use Illuminate\Notifications\Notification;
 class RegistrationSubmitted extends Notification implements ShouldQueue
 {
     use Queueable;
+    use StampsEmailLogTenant;
 
     public int $tries = 3;
 
@@ -47,13 +49,16 @@ class RegistrationSubmitted extends Notification implements ShouldQueue
         $event = $this->registration->event;
         $participant = $this->registration->participant;
 
-        return (new MailMessage)
-            ->subject("Pengesahan pendaftaran: {$event->title}")
-            ->view('notifications.registration-submitted', [
-                'event' => $event,
-                'participant' => $participant,
-                'registration' => $this->registration,
-            ]);
+        return $this->stampEmailLogTenant(
+            (new MailMessage)
+                ->subject("Pengesahan pendaftaran: {$event->title}")
+                ->view('notifications.registration-submitted', [
+                    'event' => $event,
+                    'participant' => $participant,
+                    'registration' => $this->registration,
+                ]),
+            $this->registration->organization_id,
+        );
     }
 
     /**
