@@ -35,7 +35,7 @@ class ScannerStationsRelationManager extends RelationManager
                     ->placeholder('Door A'),
                 TextInput::make('pin')
                     ->maxLength(20)
-                    ->helperText('Optional short code, an alternative to the link.'),
+                    ->helperText('Set a PIN to require it before anyone can check in via the link. Logged-in organization members skip it. Leave blank for an open link.'),
                 DateTimePicker::make('expires_at')
                     ->helperText('Optional — leave empty for no expiry.'),
                 Toggle::make('active')

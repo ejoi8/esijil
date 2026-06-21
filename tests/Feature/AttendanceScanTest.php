@@ -71,3 +71,69 @@ it('rejects a participant who is not registered for the event', function () {
     $this->postJson(route('api.scan'), ['station_token' => $station->token, 'code' => $participant->public_token])
         ->assertJson(['ok' => false, 'status' => 'invalid']);
 });
+
+it('identifies a participant without checking in when confirm is false', function () {
+    $station = scanStation();
+    $participant = Participant::factory()->create();
+    Registration::factory()->for($station->event)->for($participant)->create(['checked_in_at' => null]);
+
+    $this->postJson(route('api.scan'), [
+        'station_token' => $station->token,
+        'code' => $participant->public_token,
+        'confirm' => false,
+    ])
+        ->assertOk()
+        ->assertJson(['ok' => true, 'status' => 'found', 'name' => $participant->full_name]);
+
+    // Identify must not write anything.
+    expect($participant->registrations()->first()->checked_in_at)->toBeNull();
+});
+
+it('records the check-in only after confirm is true', function () {
+    $station = scanStation();
+    $participant = Participant::factory()->create();
+    Registration::factory()->for($station->event)->for($participant)->create(['checked_in_at' => null]);
+    $payload = ['station_token' => $station->token, 'code' => $participant->public_token];
+
+    $this->postJson(route('api.scan'), $payload + ['confirm' => false])->assertJson(['status' => 'found']);
+    expect($participant->registrations()->first()->checked_in_at)->toBeNull();
+
+    $this->postJson(route('api.scan'), $payload + ['confirm' => true])->assertJson(['status' => 'present']);
+    expect($participant->registrations()->first()->checked_in_at)->not->toBeNull();
+});
+
+it('requires the station PIN when one is set', function () {
+    $station = scanStation();
+    $station->update(['pin' => '4823']);
+    $participant = Participant::factory()->create();
+    Registration::factory()->for($station->event)->for($participant)->create(['checked_in_at' => null]);
+    $base = ['station_token' => $station->token, 'code' => $participant->public_token];
+
+    // Missing PIN -> rejected.
+    $this->postJson(route('api.scan'), $base)
+        ->assertStatus(403)->assertJson(['ok' => false, 'status' => 'pin_invalid']);
+    // Wrong PIN -> rejected.
+    $this->postJson(route('api.scan'), $base + ['pin' => '0000'])
+        ->assertStatus(403)->assertJson(['status' => 'pin_invalid']);
+    expect($participant->registrations()->first()->checked_in_at)->toBeNull();
+
+    // Correct PIN -> checked in.
+    $this->postJson(route('api.scan'), $base + ['pin' => '4823'])->assertJson(['status' => 'present']);
+    expect($participant->registrations()->first()->checked_in_at)->not->toBeNull();
+});
+
+it('verifies the station PIN at the gate before the scanner opens', function () {
+    $station = scanStation();
+    $station->update(['pin' => '4823']);
+
+    $this->postJson(route('api.scan.verify'), ['station_token' => $station->token, 'pin' => '4823'])
+        ->assertOk()->assertJson(['ok' => true]);
+
+    $this->postJson(route('api.scan.verify'), ['station_token' => $station->token, 'pin' => '0000'])
+        ->assertStatus(403)->assertJson(['ok' => false]);
+
+    // A station without a PIN is open.
+    $open = scanStation();
+    $this->postJson(route('api.scan.verify'), ['station_token' => $open->token])
+        ->assertOk()->assertJson(['ok' => true]);
+});

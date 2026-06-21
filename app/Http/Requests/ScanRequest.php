@@ -23,6 +23,10 @@ class ScanRequest extends FormRequest
         return [
             'station_token' => ['required', 'string'],
             'code' => ['required', 'string', 'max:255'],
+            // Station PIN — required by the controller only when the station has one.
+            'pin' => ['nullable', 'string', 'max:20'],
+            // false = identify only (no write); true/absent = record the check-in.
+            'confirm' => ['sometimes', 'boolean'],
             'client_scan_id' => ['nullable', 'uuid'],
             'scanned_at' => ['nullable', 'date'],
         ];
