@@ -34,9 +34,13 @@ class ScannerStationsRelationManager extends RelationManager
                     ->maxLength(255)
                     ->placeholder('Door A'),
                 TextInput::make('pin')
+                    ->password()
+                    ->revealable()
                     ->minLength(4)
                     ->maxLength(20)
-                    ->helperText('Set a PIN (min 4 chars) to require it before anyone can check in via the link. Logged-in organization members skip it. Leave blank for an open link.'),
+                    ->dehydrated(fn (?string $state): bool => filled($state))
+                    ->afterStateHydrated(fn (TextInput $component) => $component->state(null))
+                    ->helperText('Set a PIN (min 4 chars) to require it before anyone can check in via the link. Logged-in organization members skip it. Leave blank to keep the current PIN (or for an open link on a new station).'),
                 DateTimePicker::make('expires_at')
                     ->helperText('Optional — leave empty for no expiry.'),
                 Toggle::make('active')
