@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\Organization;
+use App\Support\Guides;
 use Illuminate\Http\Response;
 
 /**
@@ -60,6 +61,12 @@ class SitemapController extends Controller
             ->each(function (Organization $organization) use (&$urls): void {
                 $urls[] = ['loc' => route('organizations.landing', $organization->slug), 'lastmod' => null];
             });
+
+        // Content hub (guides).
+        $urls[] = ['loc' => route('guides.index'), 'lastmod' => null];
+        foreach (array_keys(Guides::all()) as $guideSlug) {
+            $urls[] = ['loc' => route('guides.show', $guideSlug), 'lastmod' => null];
+        }
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n"
             .'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";

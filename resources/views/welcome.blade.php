@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name') }} — Semak &amp; muat turun sijil program PUSPANITA</title>
-    <meta name="description" content="{{ config('app.name') }} ialah sistem sijil digital PUSPANITA. Daftar program melalui pautan jemputan, hadir, kemudian semak dan muat turun sijil anda menggunakan emel.">
+    <title>{{ config('app.name') }} — Sistem pendaftaran acara, kehadiran QR &amp; sijil digital</title>
+    <meta name="description" content="{{ config('app.name') }} ialah platform acara hujung-ke-hujung: cipta pautan pendaftaran boleh kongsi, rekod kehadiran dengan imbasan QR, dan terbitkan sijil digital yang boleh disahkan — semuanya dalam satu tempat.">
     <meta name="robots" content="index,follow">
     <meta name="theme-color" content="#0a0a0a">
     <link rel="canonical" href="{{ route('home') }}">
@@ -12,14 +12,14 @@
     <meta property="og:locale" content="{{ str_replace('_', '-', app()->getLocale()) }}">
     <meta property="og:site_name" content="{{ config('app.name') }}">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="{{ config('app.name') }} — Semak &amp; muat turun sijil program PUSPANITA">
-    <meta property="og:description" content="Sistem sijil digital PUSPANITA. Semak dan muat turun sijil program anda menggunakan emel.">
+    <meta property="og:title" content="{{ config('app.name') }} — Pendaftaran acara, kehadiran QR &amp; sijil digital">
+    <meta property="og:description" content="Cipta pautan pendaftaran, rekod kehadiran dengan QR, dan terbitkan sijil digital boleh sahih — dalam satu platform.">
     <meta property="og:url" content="{{ route('home') }}">
     <meta property="og:image" content="{{ url('/images/og/esijil-share.svg') }}">
-    <meta property="og:image:alt" content="eSIJIL PUSPANITA">
+    <meta property="og:image:alt" content="{{ config('app.name') }}">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ config('app.name') }} — Semak &amp; muat turun sijil program PUSPANITA">
-    <meta name="twitter:description" content="Sistem sijil digital PUSPANITA. Semak dan muat turun sijil program anda menggunakan emel.">
+    <meta name="twitter:title" content="{{ config('app.name') }} — Pendaftaran acara, kehadiran QR &amp; sijil digital">
+    <meta name="twitter:description" content="Cipta pautan pendaftaran, rekod kehadiran dengan QR, dan terbitkan sijil digital boleh sahih — dalam satu platform.">
     <meta name="twitter:image" content="{{ url('/images/og/esijil-share.svg') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -125,7 +125,7 @@
         <div class="wrap">
             <a class="brand" href="#atas" aria-label="{{ config('app.name') }}">
                 <x-brand-mark />
-                eSIJIL
+                {{ config('app.name') }}
             </a>
             <nav class="nav" aria-label="Navigasi utama">
                 <div class="nav-links">
@@ -133,6 +133,7 @@
                     <a href="#cara">Cara guna</a>
                     <a href="#sijil">Contoh sijil</a>
                     <a href="#soalan">Soalan lazim</a>
+                    <a href="{{ route('guides.index') }}">Panduan</a>
                 </div>
                 <div class="nav-cta">
                     <a class="lnk-login" href="{{ url('/auth') }}">Log Masuk</a>
@@ -147,11 +148,11 @@
         <section class="hero">
             <div class="wrap">
                 <div class="inner">
-                    <p class="kicker">Sijil digital PUSPANITA</p>
-                    <h1>Sijil program anda, sedia untuk dimuat turun.</h1>
-                    <p class="lead">Semak dan dapatkan sijil rasmi anda dalam format PDF menggunakan emel — tanpa borang, tanpa menunggu.</p>
+                    <p class="kicker">Platform acara hujung-ke-hujung</p>
+                    <h1>Daftar. Hadir. Sijil. Dalam satu platform.</h1>
+                    <p class="lead">{{ config('app.name') }} membantu persatuan, agensi, sekolah dan penganjur menguruskan acara dari pendaftaran dalam talian, kehadiran berasaskan QR, hinggalah sijil digital yang boleh disahkan.</p>
                     <div class="hero-actions">
-                        <a class="btn btn-solid" href="{{ route('certificate-lookup.index') }}">Semak Sijil</a>
+                        <a class="btn btn-solid" href="{{ url('/auth') }}">Log Masuk</a>
                         <a class="linkarrow" href="#cara">
                             Lihat cara ia berfungsi
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
@@ -166,29 +167,29 @@
             <div class="wrap">
                 <div class="sec-head center">
                     <p class="kicker">Apa yang anda boleh buat</p>
-                    <h2>Satu tempat untuk semua sijil program anda</h2>
+                    <h2>Satu platform untuk seluruh kitaran acara</h2>
                 </div>
                 <div class="grid3">
                     <div class="card">
                         <div class="ico" aria-hidden="true">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>
                         </div>
-                        <h3>Semak dengan emel</h3>
-                        <p>Masukkan alamat emel anda dan sistem akan paparkan setiap sijil yang layak untuk anda.</p>
+                        <h3>Pendaftaran dalam talian</h3>
+                        <p>Kongsi pautan pendaftaran bertandatangan, kumpul medan tersuai dan hadkan bilangan tempat secara automatik.</p>
                     </div>
                     <div class="card">
                         <div class="ico" aria-hidden="true">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 21v.01M21 17v.01M17 21v.01"/></svg>
                         </div>
-                        <h3>Muat turun PDF</h3>
-                        <p>Sijil dijana sebagai fail PDF yang kemas — sedia untuk disimpan, dicetak atau dikongsi.</p>
+                        <h3>Kehadiran QR</h3>
+                        <p>Imbas kod QR peserta untuk daftar masuk pantas di pintu — dengan mod semak data dahulu atau mod laju.</p>
                     </div>
                     <div class="card">
                         <div class="ico" aria-hidden="true">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5z"/><path d="m9 12 2 2 4-4"/></svg>
                         </div>
-                        <h3>Sah &amp; rasmi</h3>
-                        <p>Setiap sijil membawa nombor sijil unik dan rekod program rasmi PUSPANITA.</p>
+                        <h3>Sijil digital boleh sahih</h3>
+                        <p>Jana sijil PDF dengan nombor unik, dan benarkan penerima menyemak kesahihannya secara dalam talian.</p>
                     </div>
                 </div>
             </div>
@@ -199,29 +200,29 @@
             <div class="wrap">
                 <div class="sec-head center">
                     <p class="kicker">Cara ia berfungsi</p>
-                    <h2>Dari jemputan ke sijil dalam empat langkah</h2>
-                    <p class="lead">Pendaftaran program adalah melalui jemputan sahaja — anda tidak perlu mendaftar akaun.</p>
+                    <h2>Dari pendaftaran ke sijil dalam empat langkah</h2>
+                    <p class="lead">Sediakan acara sekali, dan biarkan setiap peringkat mengalir dengan kemas.</p>
                 </div>
                 <div class="steps">
                     <div class="step">
                         <p class="num">01</p>
-                        <h3>Terima pautan jemputan</h3>
-                        <p>Penganjur menghantar pautan jemputan bertandatangan khusus untuk program anda.</p>
+                        <h3>Cipta acara</h3>
+                        <p>Tetapkan butiran acara, medan pendaftaran dan had tempat dalam panel pentadbir.</p>
                     </div>
                     <div class="step">
                         <p class="num">02</p>
-                        <h3>Daftar program</h3>
-                        <p>Buka pautan, sahkan butiran anda dan daftar — hanya mengambil masa seminit.</p>
+                        <h3>Kongsi pautan</h3>
+                        <p>Edarkan pautan pendaftaran bertandatangan kepada peserta — tiada akaun diperlukan untuk mendaftar.</p>
                     </div>
                     <div class="step">
                         <p class="num">03</p>
-                        <h3>Hadir program</h3>
-                        <p>Sertai program seperti dijadualkan. Kehadiran anda direkodkan oleh penganjur.</p>
+                        <h3>Imbas kehadiran</h3>
+                        <p>Daftar masuk peserta di pintu dengan mengimbas kod QR mereka melalui telefon.</p>
                     </div>
                     <div class="step">
                         <p class="num">04</p>
-                        <h3>Semak &amp; muat turun sijil</h3>
-                        <p>Selepas program, semak dengan emel dan muat turun sijil PDF anda.</p>
+                        <h3>Terbitkan sijil</h3>
+                        <p>Keluarkan sijil digital; peserta menyemak dan memuat turunnya menggunakan emel.</p>
                     </div>
                 </div>
             </div>
@@ -232,14 +233,14 @@
             <div class="wrap">
                 <div class="sec-head center">
                     <p class="kicker">Contoh rekod sijil</p>
-                    <h2>Inilah yang anda lihat semasa semakan</h2>
+                    <h2>Inilah yang peserta lihat semasa semakan</h2>
                 </div>
                 <div class="preview">
                     <div class="preview-card" role="img" aria-label="Contoh rekod sijil untuk Nor Aisyah binti Ramli: Emel, Program, Tarikh dan Nombor Sijil.">
                         <div class="preview-head">
                             <span class="brand-mini">
                                 <x-brand-mark variant="mini" />
-                                Sijil PUSPANITA
+                                Sijil Digital
                             </span>
                             <span class="pill">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
@@ -252,9 +253,9 @@
                         </div>
                         <div class="rows">
                             <div class="row"><span class="k">Emel</span><span class="v">n****@email.com</span></div>
-                            <div class="row"><span class="k">Program</span><span class="v">Bengkel Kepimpinan PUSPANITA 2026</span></div>
+                            <div class="row"><span class="k">Program</span><span class="v">Seminar Kepimpinan 2026</span></div>
                             <div class="row"><span class="k">Tarikh</span><span class="v">14 Mac 2026</span></div>
-                            <div class="row big"><span class="k">Nombor Sijil</span><span class="v">PSP-2026-04821</span></div>
+                            <div class="row big"><span class="k">Nombor Sijil</span><span class="v">SJL-2026-04821</span></div>
                         </div>
                     </div>
                 </div>
@@ -270,24 +271,24 @@
                 </div>
                 <div class="faq">
                     <details>
-                        <summary>Bagaimana saya menyemak sijil saya?<span class="toggle" aria-hidden="true"></span></summary>
-                        <p class="answer">Klik butang Semak Sijil dan masukkan emel anda. Sistem akan memaparkan setiap sijil program yang layak untuk anda muat turun.</p>
+                        <summary>Apakah {{ config('app.name') }}?<span class="toggle" aria-hidden="true"></span></summary>
+                        <p class="answer">{{ config('app.name') }} ialah platform untuk menguruskan acara hujung-ke-hujung — pendaftaran dalam talian, kehadiran berasaskan QR, dan penerbitan sijil digital yang boleh disahkan.</p>
                     </details>
                     <details>
-                        <summary>Adakah saya perlu mendaftar akaun?<span class="toggle" aria-hidden="true"></span></summary>
-                        <p class="answer">Tidak. Pendaftaran program adalah melalui pautan jemputan sahaja, dan semakan sijil hanya memerlukan emel anda.</p>
+                        <summary>Siapa yang sesuai menggunakannya?<span class="toggle" aria-hidden="true"></span></summary>
+                        <p class="answer">Persatuan dan NGO, agensi kerajaan, sekolah dan IPT, penyedia latihan/CPD, serta mana-mana penganjur acara yang memerlukan pendaftaran, kehadiran dan sijil dalam satu tempat.</p>
                     </details>
                     <details>
-                        <summary>Saya tidak menerima pautan jemputan. Apa patut saya buat?<span class="toggle" aria-hidden="true"></span></summary>
-                        <p class="answer">Pautan jemputan dihantar oleh penganjur program. Sila hubungi penganjur PUSPANITA program anda untuk mendapatkan semula pautan tersebut.</p>
+                        <summary>Adakah peserta perlu mendaftar akaun?<span class="toggle" aria-hidden="true"></span></summary>
+                        <p class="answer">Tidak. Peserta mendaftar melalui pautan jemputan yang dikongsi penganjur, dan menyemak sijil hanya dengan emel.</p>
                     </details>
                     <details>
-                        <summary>Bilakah sijil saya tersedia?<span class="toggle" aria-hidden="true"></span></summary>
-                        <p class="answer">Sijil tersedia untuk dimuat turun selepas kehadiran anda disahkan oleh penganjur program.</p>
+                        <summary>Bagaimana kehadiran direkodkan?<span class="toggle" aria-hidden="true"></span></summary>
+                        <p class="answer">Petugas mengimbas kod QR peserta di pintu menggunakan telefon. Mod semak membenarkan pengesahan data dahulu sebelum daftar masuk direkodkan.</p>
                     </details>
                     <details>
-                        <summary>Saya kakitangan PUSPANITA — di mana saya log masuk?<span class="toggle" aria-hidden="true"></span></summary>
-                        <p class="answer">Gunakan pautan Log Masuk di bahagian atas untuk mengakses panel pentadbir bagi mengurus program dan sijil.</p>
+                        <summary>Bagaimana peserta menyemak sijil mereka?<span class="toggle" aria-hidden="true"></span></summary>
+                        <p class="answer">Klik Semak Sijil dan masukkan emel. Sistem akan memaparkan setiap sijil yang layak untuk dimuat turun.</p>
                     </details>
                 </div>
             </div>
@@ -297,12 +298,12 @@
         <section class="sec">
             <div class="wrap">
                 <div class="cta">
-                    <h2>Sijil anda menanti.</h2>
-                    <p>Semak dengan emel anda dan muat turun sijil program dalam beberapa saat.</p>
+                    <h2>Uruskan acara anda dengan lebih kemas.</h2>
+                    <p>Satu platform untuk pendaftaran, kehadiran dan sijil — sedia untuk acara anda yang seterusnya.</p>
                     <div class="acts">
-                        <a class="btn btn-white" href="{{ route('certificate-lookup.index') }}">Semak Sijil</a>
-                        <a class="linkarrow on-dark" href="#cara">
-                            Lihat cara ia berfungsi
+                        <a class="btn btn-white" href="{{ url('/auth') }}">Log Masuk</a>
+                        <a class="linkarrow on-dark" href="{{ route('certificate-lookup.index') }}">
+                            Semak sijil anda
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                         </a>
                     </div>
@@ -316,13 +317,14 @@
         <div class="wrap">
             <a class="brand" href="#atas" aria-label="{{ config('app.name') }}">
                 <x-brand-mark />
-                eSIJIL
+                {{ config('app.name') }}
             </a>
             <div class="foot-links">
+                <a href="{{ route('guides.index') }}">Panduan</a>
                 <a href="{{ route('certificate-lookup.index') }}">Semak Sijil</a>
                 <a href="{{ url('/auth') }}">Log Masuk</a>
             </div>
-            <p class="copy">ICT PUSPANITA &copy; 2026 <span class="em" aria-hidden="true">—</span> <span aria-hidden="true">🇲🇾</span></p>
+            <p class="copy">{{ config('app.name') }} &copy; {{ date('Y') }} <span class="em" aria-hidden="true">—</span> <span aria-hidden="true">🇲🇾</span></p>
         </div>
     </footer>
 </body>

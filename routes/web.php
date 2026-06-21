@@ -6,6 +6,7 @@ use App\Http\Controllers\CustomFieldFileController;
 use App\Http\Controllers\EventLandingController;
 use App\Http\Controllers\EventQrSheetController;
 use App\Http\Controllers\EventRegistrationController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\OrganizationLandingController;
 use App\Http\Controllers\ParticipantStatusController;
 use App\Http\Controllers\ScannerController;
@@ -19,6 +20,8 @@ Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
 Route::get('/e/{event:slug}', [EventLandingController::class, 'show'])->name('events.landing');
 Route::get('/o/{organization}', [OrganizationLandingController::class, 'show'])->name('organizations.landing');
+Route::get('/panduan', [GuideController::class, 'index'])->name('guides.index');
+Route::get('/panduan/{slug}', [GuideController::class, 'show'])->name('guides.show');
 Route::get('/semakan', [CertificateLookupController::class, 'index'])->name('certificate-lookup.index');
 Route::post('/semakan', [CertificateLookupController::class, 'search'])
     ->middleware('throttle:certificate-lookup')

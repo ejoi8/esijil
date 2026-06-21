@@ -3,6 +3,7 @@
 use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\Organization;
+use App\Support\Guides;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -79,4 +80,23 @@ it('includes issuer profiles with public events in the sitemap', function () {
     Event::factory()->create(['organization_id' => $org->id, 'status' => EventStatus::Published, 'listed' => true]);
 
     $this->get('/sitemap.xml')->assertOk()->assertSee($org->slug, false);
+});
+
+it('renders the guides hub and a guide with Article JSON-LD', function () {
+    $this->get(route('guides.index'))->assertOk()->assertSee('Panduan');
+
+    $slug = array_key_first(Guides::all());
+    $this->get(route('guides.show', $slug))
+        ->assertOk()
+        ->assertSee('"@type":"Article"', false)
+        ->assertSee('index,follow', false);
+});
+
+it('404s an unknown guide slug', function () {
+    $this->get(route('guides.show', 'tiada-panduan-ini'))->assertNotFound();
+});
+
+it('includes guides in the sitemap', function () {
+    $slug = array_key_first(Guides::all());
+    $this->get('/sitemap.xml')->assertOk()->assertSee($slug, false);
 });
