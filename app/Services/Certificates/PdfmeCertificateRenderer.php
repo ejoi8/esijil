@@ -98,7 +98,6 @@ class PdfmeCertificateRenderer
 
         return array_merge($detailVariables, [
             'participant_name' => (string) $participant->full_name,
-            'participant_nokp' => (string) $participant->nokp,
             'event_title' => (string) $event->title,
             'event_description' => (string) ($event->description ?? ''),
             'date_line' => (string) ($this->formatDateRange($event->starts_at?->format('d M Y'), $event->ends_at?->format('d M Y')) ?? ''),

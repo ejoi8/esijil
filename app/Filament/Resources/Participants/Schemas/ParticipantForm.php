@@ -24,10 +24,6 @@ class ParticipantForm
                             ->email()
                             ->required()
                             ->maxLength(255),
-                        TextInput::make('nokp')
-                            ->label('No. KP')
-                            ->required()
-                            ->maxLength(255),
                         TextInput::make('phone')
                             ->tel()
                             ->maxLength(255),

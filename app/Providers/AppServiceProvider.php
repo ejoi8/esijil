@@ -11,12 +11,12 @@ use App\Services\Certificates\PdfmeNodeCertificateGenerator;
 use App\Services\Mail\MailSettingsConfigurator;
 use App\Settings\CertificateSettings;
 use App\Settings\MailSettings;
-use App\Support\Nokp;
 use Ejoi8\FilamentEmailLogs\Support\EmailLogTenancy;
 use Filament\Events\TenantSet;
 use Filament\Facades\Filament;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Event;
@@ -53,6 +53,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Local-dev only: trust any proxy so Laravel reads X-Forwarded-* (the
+        // real public host + https) — needed for ngrok/tunnel access via Laragon.
+        // Remove this (or scope to your proxy's IPs) before production.
+        TrustProxies::at('*');
+
         $this->configureMailSettings();
 
         // Scope spatie permissions to the active Filament tenant (teams) so roles
@@ -89,7 +94,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(fn (?User $user, string $ability): ?bool => ($user?->is_platform_admin || $user?->hasRole(UserRole::Admin->value)) ? true : null);
 
         RateLimiter::for('certificate-lookup', function (Request $request): Limit {
-            return Limit::perMinute(5)->by($request->ip().'|'.sha1(Nokp::digits($request->input('nokp'))));
+            return Limit::perMinute(5)->by($request->ip().'|'.sha1(mb_strtolower((string) $request->input('email'))));
         });
 
         RateLimiter::for('event-registration', function (Request $request): Limit {
@@ -98,7 +103,7 @@ class AppServiceProvider extends ServiceProvider
             $eventKey = (string) $request->route('event');
 
             return Limit::perMinute(5)->by(
-                $request->ip().'|event:'.$eventKey.'|'.sha1(Nokp::digits($request->input('nokp'))),
+                $request->ip().'|event:'.$eventKey.'|'.sha1(mb_strtolower((string) $request->input('email'))),
             );
         });
 

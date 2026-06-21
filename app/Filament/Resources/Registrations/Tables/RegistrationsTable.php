@@ -33,9 +33,6 @@ class RegistrationsTable
                     ->searchable(),
                 TextColumn::make('participant.full_name')
                     ->searchable(),
-                TextColumn::make('participant.nokp')
-                    ->label('No. KP')
-                    ->searchable(),
                 TextColumn::make('registered_at')
                     ->dateTime('d M Y H:i')
                     ->sortable(),

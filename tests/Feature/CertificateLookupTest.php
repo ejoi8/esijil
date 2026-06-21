@@ -12,7 +12,7 @@ it('shows the certificate lookup page', function () {
         ->assertSuccessful()
         ->assertSee('Semakan dan Muat Turun Sijil')
         ->assertSee('ICT PUSPANITA')
-        ->assertSee('Masukkan No. KP')
+        ->assertSee('Masukkan emel')
         ->assertDontSee('Jumlah Rekod');
 });
 
@@ -20,7 +20,7 @@ it('shows only the application name on the root page', function () {
     $this->get(route('home'))
         ->assertSuccessful()
         ->assertSee(config('app.name'))
-        ->assertDontSee('Masukkan No. KP');
+        ->assertDontSee('Masukkan emel');
 });
 
 it('uses semakan as the lookup form url', function () {
@@ -32,10 +32,10 @@ it('redirects away from the result page without a lookup session', function () {
         ->assertRedirect(route('certificate-lookup.index'));
 });
 
-it('redirects to the result page after a successful nokp lookup', function () {
+it('redirects to the result page after a successful email lookup', function () {
     $participant = Participant::factory()->create([
         'full_name' => 'Siti Puspanita',
-        'nokp' => '900101015555',
+        'email' => 'siti.puspanita@example.com',
     ]);
 
     $event = Event::factory()->create([
@@ -45,7 +45,7 @@ it('redirects to the result page after a successful nokp lookup', function () {
     Registration::factory()->for($participant)->for($event)->create();
 
     $this->post(route('certificate-lookup.search'), [
-        'nokp' => '900101015555',
+        'email' => 'siti.puspanita@example.com',
     ])
         ->assertRedirect(route('certificate-lookup.result'))
         ->assertSessionHas('certificate_lookup_participant_id', $participant->id);
@@ -60,7 +60,7 @@ it('redirects to the result page after a successful nokp lookup', function () {
 it('downloads a certificate after a successful lookup session', function () {
     $participant = Participant::factory()->create([
         'full_name' => 'Siti Puspanita',
-        'nokp' => '900101015555',
+        'email' => 'siti.puspanita@example.com',
     ]);
 
     $event = Event::factory()->create([
@@ -70,7 +70,7 @@ it('downloads a certificate after a successful lookup session', function () {
     $registration = Registration::factory()->for($participant)->for($event)->create();
 
     $this->post(route('certificate-lookup.search'), [
-        'nokp' => '900101015555',
+        'email' => 'siti.puspanita@example.com',
     ])->assertRedirect(route('certificate-lookup.result'));
 
     $this->get(route('certificate-lookup.download', $registration))
@@ -85,7 +85,7 @@ it('downloads a certificate after a successful lookup session', function () {
 it('does not show organizer or venue details on the lookup result table', function () {
     $participant = Participant::factory()->create([
         'full_name' => 'Siti Puspanita',
-        'nokp' => '900101015555',
+        'email' => 'siti.puspanita@example.com',
     ]);
 
     $event = Event::factory()->create([
@@ -95,7 +95,7 @@ it('does not show organizer or venue details on the lookup result table', functi
     Registration::factory()->for($participant)->for($event)->create();
 
     $this->post(route('certificate-lookup.search'), [
-        'nokp' => '900101015555',
+        'email' => 'siti.puspanita@example.com',
     ])
         ->assertRedirect(route('certificate-lookup.result'));
 
@@ -107,9 +107,7 @@ it('does not show organizer or venue details on the lookup result table', functi
 });
 
 it('forbids certificate download without a matching lookup session', function () {
-    $participant = Participant::factory()->create([
-        'nokp' => '900101015555',
-    ]);
+    $participant = Participant::factory()->create();
 
     $event = Event::factory()->create();
     $registration = Registration::factory()->for($participant)->for($event)->create();

@@ -48,7 +48,7 @@
                 @endif
 
                 @if (session('registration_exists'))
-                    <div class="notice">Rekod pendaftaran untuk No. KP ini telah wujud.</div>
+                    <div class="notice">Rekod pendaftaran untuk emel ini telah wujud.</div>
                 @endif
 
                 @if ($errors->has('event'))
@@ -58,6 +58,13 @@
                 @if (! $registrationIsOpen)
                     <div class="notice">Pendaftaran ditutup buat masa ini.</div>
                 @endif
+
+                @if ($isFull)
+                    <div class="notice is-danger">Pendaftaran penuh — tiada tempat lagi.</div>
+                @else
+                    @if ($seatsRemaining !== null)
+                        <div class="notice">Baki {{ $seatsRemaining }} tempat.</div>
+                    @endif
 
                 <form action="{{ request()->fullUrl() }}" method="POST" enctype="multipart/form-data" data-registration-form style="margin-top:18px">
                     @csrf
@@ -76,35 +83,18 @@
                         @error('full_name')<p class="err">{{ $message }}</p>@enderror
                     </div>
 
-                    <div class="field grid2">
-                        <div>
-                            <label class="label" for="nokp">No. KP</label>
-                            <input
-                                id="nokp"
-                                name="nokp"
-                                type="text"
-                                inputmode="numeric"
-                                class="input"
-                                value="{{ old('nokp') }}"
-                                placeholder="Contoh: 900101015555"
-                                required
-                            >
-                            @error('nokp')<p class="err">{{ $message }}</p>@enderror
-                        </div>
-
-                        <div>
-                            <label class="label" for="email">Emel</label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                class="input"
-                                value="{{ old('email') }}"
-                                placeholder="nama@email.com"
-                                required
-                            >
-                            @error('email')<p class="err">{{ $message }}</p>@enderror
-                        </div>
+                    <div class="field">
+                        <label class="label" for="email">Emel</label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            class="input"
+                            value="{{ old('email') }}"
+                            placeholder="nama@email.com"
+                            required
+                        >
+                        @error('email')<p class="err">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="field">
@@ -136,6 +126,7 @@
                         </button>
                     </div>
                 </form>
+                @endif
             </section>
         </div>
     </div>

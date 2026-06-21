@@ -21,8 +21,6 @@ class RegistrationInfolist
                     ->label('Event'),
                 TextEntry::make('participant.full_name')
                     ->label('Participant'),
-                TextEntry::make('participant.nokp')
-                    ->label('No. KP'),
                 TextEntry::make('registered_at')
                     ->dateTime(),
                 TextEntry::make('attendance_status'),

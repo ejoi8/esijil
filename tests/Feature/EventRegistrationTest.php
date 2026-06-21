@@ -70,14 +70,13 @@ it('registers a participant for a published event', function () {
     $this->post($url, [
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
-        'nokp' => '900101-01-5555',
         'phone' => '0123456789',
         'participant_details' => ['membership_status' => 'member'],
     ])
         ->assertRedirect()
         ->assertSessionHas('registration_created');
 
-    $participant = Participant::query()->firstWhere('nokp', '900101015555');
+    $participant = Participant::query()->firstWhere('email', 'siti@example.test');
 
     expect($participant)->not->toBeNull()
         ->and($participant->full_name)->toBe('Siti Puspanita')
@@ -127,7 +126,6 @@ it('queues the registration confirmation notification after registration', funct
     $this->post($event->publicRegistrationUrl(), [
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
-        'nokp' => '900101-01-5555',
         'phone' => '0123456789',
         'participant_details' => ['membership_status' => 'member'],
     ])
@@ -157,7 +155,7 @@ it('does not create duplicate registrations for the same participant and event',
         'registration_open' => true,
     ]);
     $participant = Participant::factory()->create([
-        'nokp' => '900101015555',
+        'email' => 'updated@example.test',
     ]);
     Registration::factory()->for($event)->for($participant)->create();
     $url = $event->publicRegistrationUrl();
@@ -165,7 +163,6 @@ it('does not create duplicate registrations for the same participant and event',
     $this->post($url, [
         'full_name' => 'Siti Puspanita',
         'email' => 'updated@example.test',
-        'nokp' => '900101015555',
         'phone' => null,
         'participant_details' => ['membership_status' => 'non_member'],
     ])
@@ -186,11 +183,10 @@ it('throttles repeated registration attempts for the same participant', function
         'registration_open' => true,
     ]);
     $url = $event->publicRegistrationUrl();
-    RateLimiter::clear('127.0.0.1|event:'.$event->id.'|'.sha1('900101015555'));
+    RateLimiter::clear('127.0.0.1|event:'.$event->id.'|'.sha1('siti@example.test'));
     $payload = [
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
-        'nokp' => '900101015555',
         'phone' => '0123456789',
         'participant_details' => ['membership_status' => 'member'],
     ];
@@ -217,14 +213,13 @@ it('does not send registration confirmation when disabled for the organization',
     $this->post($event->publicRegistrationUrl(), [
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
-        'nokp' => '900101-01-5555',
         'phone' => '0123456789',
         'participant_details' => ['membership_status' => 'member'],
     ])
         ->assertRedirect()
         ->assertSessionHas('registration_created');
 
-    $participant = Participant::query()->firstWhere('nokp', '900101015555');
+    $participant = Participant::query()->firstWhere('email', 'siti@example.test');
 
     expect($participant)->not->toBeNull();
 
@@ -266,13 +261,12 @@ it('rejects registration when the registration window is closed', function () {
     $this->post($url, [
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
-        'nokp' => '900101015555',
         'participant_details' => ['membership_status' => 'member'],
     ])
         ->assertSessionHasErrors(['event']);
 
     $this->assertDatabaseMissing(Participant::class, [
-        'nokp' => '900101015555',
+        'email' => 'siti@example.test',
     ]);
 });
 
@@ -301,4 +295,75 @@ it('does not expose draft event registration pages even with a signed url', func
 
     $this->get($event->publicRegistrationUrl())
         ->assertNotFound();
+});
+
+it('blocks a public sign-up when the event is full', function () {
+    Notification::fake();
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'registration_open' => true,
+        'capacity' => 1,
+    ]);
+    Registration::factory()->for($event)->for(Participant::factory())->create(); // fills the only seat
+
+    $this->post($event->publicRegistrationUrl(), [
+        'full_name' => 'Late Comer',
+        'email' => 'late@example.test',
+        'participant_details' => ['membership_status' => 'member'],
+    ])->assertSessionHasErrors('event');
+
+    // No participant or registration was created for the blocked sign-up.
+    expect(Participant::query()->where('email', 'late@example.test')->exists())->toBeFalse()
+        ->and($event->registrations()->count())->toBe(1);
+});
+
+it('allows a public sign-up while seats remain', function () {
+    Notification::fake();
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'registration_open' => true,
+        'capacity' => 2,
+    ]);
+    Registration::factory()->for($event)->for(Participant::factory())->create();
+
+    $this->post($event->publicRegistrationUrl(), [
+        'full_name' => 'Siti Puspanita',
+        'email' => 'siti@example.test',
+        'participant_details' => ['membership_status' => 'member'],
+    ])->assertRedirect()->assertSessionHas('registration_created');
+
+    expect($event->registrations()->count())->toBe(2);
+});
+
+it('lets an already-registered participant re-submit even when the event is full', function () {
+    Notification::fake();
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'registration_open' => true,
+        'capacity' => 1,
+    ]);
+    $participant = Participant::factory()->create(['email' => 'siti@example.test']);
+    Registration::factory()->for($event)->for($participant)->create(); // event full at 1/1
+
+    $this->post($event->publicRegistrationUrl(), [
+        'full_name' => 'Siti Updated',
+        'email' => 'siti@example.test',
+        'participant_details' => ['membership_status' => 'member'],
+    ])->assertRedirect()->assertSessionHas('registration_exists');
+
+    expect($event->registrations()->count())->toBe(1);
+});
+
+it('shows the full state and hides the form when capacity is reached', function () {
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'registration_open' => true,
+        'capacity' => 1,
+    ]);
+    Registration::factory()->for($event)->for(Participant::factory())->create();
+
+    $this->get($event->publicRegistrationUrl())
+        ->assertSuccessful()
+        ->assertSee('Pendaftaran penuh')
+        ->assertDontSee('Hantar Pendaftaran');
 });

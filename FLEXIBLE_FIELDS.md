@@ -9,6 +9,8 @@
 > - Works for **both `participant` and `registration`** records; values live in each model's `details` JSON column. The public form namespaces inputs (`participant_details[…]` / `registration_details[…]`).
 >
 > The sections below are retained as the original design rationale (the config-file `ParticipantFields`/`config/participant_fields.php` they reference no longer exist).
+>
+> **Update (2026-06-21):** `nokp` (along with the legacy `branch_id` / `membership_status`) has since been removed from the `participants` table entirely. `nokp` is now an optional **custom field** (stored in `details`); participant dedup and public certificate lookup both key on **email**. References below to `nokp` / `membership_status` as "core columns" are historical.
 
 > **Question this answers:** the participant model is rigid — a field like "Status Ahli" (`membership_status`) is a fixed column wired into many files, so adding/removing a field is painful. How do we make fields flexible to add/remove **without over-complicating things**?
 

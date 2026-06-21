@@ -1,12 +1,12 @@
 <x-layouts.mono
     :title="'Semakan Sijil'"
-    :description="'Semak sijil program PUSPANITA menggunakan No. KP dan muat turun sijil digital yang tersedia secara terus.'"
+    :description="'Semak sijil program PUSPANITA menggunakan emel dan muat turun sijil digital yang tersedia secara terus.'"
     :canonical="route('certificate-lookup.index')"
 >
     <div class="col">
         <p class="kicker">Semakan Sijil</p>
         <h1>Semakan dan Muat Turun Sijil</h1>
-        <p class="lead">Masukkan No. KP anda untuk semak dan muat turun sijil program PUSPANITA yang tersedia.</p>
+        <p class="lead">Masukkan emel anda untuk semak dan muat turun sijil program PUSPANITA yang tersedia.</p>
 
         <div class="stack">
             <section class="card" aria-label="Carian sijil">
@@ -14,18 +14,17 @@
                     @csrf
 
                     <div class="field">
-                        <label class="label" for="nokp">No. KP</label>
+                        <label class="label" for="email">Emel</label>
                         <input
-                            id="nokp"
-                            name="nokp"
-                            type="text"
-                            inputmode="numeric"
+                            id="email"
+                            name="email"
+                            type="email"
                             class="input"
-                            value="{{ old('nokp') }}"
-                            placeholder="Contoh: 900101015555"
+                            value="{{ old('email') }}"
+                            placeholder="nama@email.com"
                             required
                         >
-                        @error('nokp')<p class="err">{{ $message }}</p>@enderror
+                        @error('email')<p class="err">{{ $message }}</p>@enderror
                     </div>
 
                     <div class="formfoot">

@@ -48,11 +48,10 @@ it('stores the branch value into participant details on public registration', fu
     $this->post($event->publicRegistrationUrl(), [
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
-        'nokp' => '900101015555',
         'participant_details' => ['branch' => 'Selangor', 'membership_status' => 'member'],
     ])->assertRedirect();
 
-    expect(Participant::query()->firstWhere('nokp', '900101015555')->details)
+    expect(Participant::query()->firstWhere('email', 'siti@example.test')->details)
         ->toMatchArray(['branch' => 'Selangor']);
 });
 
@@ -62,7 +61,6 @@ it('rejects a branch value outside the dropdown options', function () {
     $this->post($event->publicRegistrationUrl(), [
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
-        'nokp' => '900101015555',
         'participant_details' => ['branch' => 'Atlantis', 'membership_status' => 'member'],
     ])->assertSessionHasErrors('participant_details.branch');
 });

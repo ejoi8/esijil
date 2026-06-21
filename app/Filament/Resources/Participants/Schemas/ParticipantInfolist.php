@@ -17,7 +17,6 @@ class ParticipantInfolist
                 TextEntry::make('full_name'),
                 TextEntry::make('email')
                     ->label('Email'),
-                TextEntry::make('nokp'),
                 TextEntry::make('phone')
                     ->placeholder('-'),
                 TextEntry::make('registrations_count')

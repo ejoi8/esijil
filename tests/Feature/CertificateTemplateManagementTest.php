@@ -46,7 +46,7 @@ it('uses the current event template when a participant downloads a certificate',
     ]);
 
     $participant = Participant::factory()->create([
-        'nokp' => '900101015555',
+        'email' => 'participant@example.com',
     ]);
 
     $event = Event::factory()->for($template, 'certificateTemplate')->create();
@@ -57,7 +57,7 @@ it('uses the current event template when a participant downloads a certificate',
     ])->save();
 
     $this->post(route('certificate-lookup.search'), [
-        'nokp' => $participant->nokp,
+        'email' => $participant->email,
     ])->assertRedirect(route('certificate-lookup.result'));
 
     $this->get(route('certificate-lookup.download', $registration))

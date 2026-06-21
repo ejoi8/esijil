@@ -70,7 +70,6 @@ function registrationPayload(array $overrides = []): array
     return array_merge([
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
-        'nokp' => '900101015555',
         'phone' => '0123456789',
     ], $overrides, ['participant_details' => $participantDetails]);
 }
@@ -100,14 +99,14 @@ it('stores custom field values in participant details on public registration', f
         'participant_details' => ['jawatan' => 'Setiausaha', 'shirt_size' => 'M'],
     ]))->assertRedirect();
 
-    expect(Participant::query()->firstWhere('nokp', '900101015555')->details)
+    expect(Participant::query()->firstWhere('email', 'siti@example.test')->details)
         ->toMatchArray(['jawatan' => 'Setiausaha', 'shirt_size' => 'M']);
 });
 
 it('keeps existing details when re-registering with new public values', function () {
     $event = openEvent();
     $participant = Participant::factory()->create([
-        'nokp' => '900101015555',
+        'email' => 'siti@example.test',
         'details' => ['internal_note' => 'kept'],
     ]);
 
@@ -137,12 +136,11 @@ it('saves a custom field via the admin participant form', function () {
         ->fillForm([
             'full_name' => 'Nor Aisyah',
             'email' => 'aisyah@example.test',
-            'nokp' => '880202025566',
             'details' => ['membership_status' => 'member', 'jawatan' => 'Pengerusi'],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
 
-    expect(Participant::query()->firstWhere('nokp', '880202025566')->details)
+    expect(Participant::query()->firstWhere('email', 'aisyah@example.test')->details)
         ->toMatchArray(['jawatan' => 'Pengerusi']);
 });

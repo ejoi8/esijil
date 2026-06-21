@@ -7,7 +7,6 @@ use App\Enums\CustomFieldEntity;
 use App\Enums\RegistrationSource;
 use App\Fields\CustomFields;
 use App\Models\Event;
-use App\Models\Participant;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -31,7 +30,6 @@ class RegistrationForm
                             ->required(),
                         Select::make('participant_id')
                             ->relationship('participant', 'full_name')
-                            ->getOptionLabelFromRecordUsing(fn (Participant $record): string => "{$record->full_name} ({$record->nokp})")
                             ->searchable()
                             ->preload()
                             ->required(),

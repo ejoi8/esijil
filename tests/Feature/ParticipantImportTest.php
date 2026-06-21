@@ -25,7 +25,7 @@ function runParticipantImport(array $rows, array $options): void
         'total_rows' => count($rows),
     ]);
 
-    $columns = ['full_name', 'nokp', 'email', 'phone', 'external_id'];
+    $columns = ['full_name', 'email', 'phone', 'external_id'];
     $map = array_combine($columns, $columns);
 
     foreach ($rows as $row) {
@@ -40,14 +40,14 @@ it('imports a roster, creating participants and event registrations', function (
     $options = ['organization_id' => $event->organization_id, 'event_id' => $event->id];
 
     runParticipantImport([
-        ['full_name' => 'Ali bin Abu', 'nokp' => '900101-01-5555', 'email' => 'ali@example.test'],
-        ['full_name' => 'Siti binti Aminah', 'nokp' => '910202025566', 'email' => 'siti@example.test'],
+        ['full_name' => 'Ali bin Abu', 'email' => 'ali@example.test'],
+        ['full_name' => 'Siti binti Aminah', 'email' => 'siti@example.test'],
     ], $options);
 
     expect(Participant::where('organization_id', $event->organization_id)->count())->toBe(2)
         ->and(Registration::where('event_id', $event->id)->count())->toBe(2);
 
-    $ali = Participant::where('nokp', '900101015555')->first();
+    $ali = Participant::where('email', 'ali@example.test')->first();
     expect($ali)->not->toBeNull()
         ->and($ali->public_token)->not->toBeNull()
         ->and($ali->registrations()->first()->source)->toBe(RegistrationSource::Import);
@@ -57,11 +57,11 @@ it('upserts on re-import without duplicating the participant', function () {
     $event = Event::factory()->create();
     $options = ['organization_id' => $event->organization_id, 'event_id' => $event->id];
 
-    runParticipantImport([['full_name' => 'Ali', 'nokp' => '900101015555', 'email' => 'ali@example.test']], $options);
-    runParticipantImport([['full_name' => 'Ali Updated', 'nokp' => '900101-01-5555', 'email' => 'ali@example.test']], $options);
+    runParticipantImport([['full_name' => 'Ali', 'email' => 'ali@example.test']], $options);
+    runParticipantImport([['full_name' => 'Ali Updated', 'email' => 'ali@example.test']], $options);
 
-    expect(Participant::where('nokp', '900101015555')->count())->toBe(1)
-        ->and(Participant::where('nokp', '900101015555')->first()->full_name)->toBe('Ali Updated')
+    expect(Participant::where('email', 'ali@example.test')->count())->toBe(1)
+        ->and(Participant::where('email', 'ali@example.test')->first()->full_name)->toBe('Ali Updated')
         ->and(Registration::where('event_id', $event->id)->count())->toBe(1);
 });
 
@@ -69,8 +69,8 @@ it('upserts by external id when present', function () {
     $event = Event::factory()->create();
     $options = ['organization_id' => $event->organization_id, 'event_id' => $event->id];
 
-    runParticipantImport([['full_name' => 'Card Holder', 'nokp' => '900101015555', 'email' => 'card@example.test', 'external_id' => 'STAFF-1']], $options);
-    runParticipantImport([['full_name' => 'Renamed', 'nokp' => '920202025566', 'email' => 'card@example.test', 'external_id' => 'STAFF-1']], $options);
+    runParticipantImport([['full_name' => 'Card Holder', 'email' => 'card@example.test', 'external_id' => 'STAFF-1']], $options);
+    runParticipantImport([['full_name' => 'Renamed', 'email' => 'card@example.test', 'external_id' => 'STAFF-1']], $options);
 
     expect(Participant::where('external_id', 'STAFF-1')->count())->toBe(1)
         ->and(Participant::where('external_id', 'STAFF-1')->first()->full_name)->toBe('Renamed');

@@ -2,13 +2,10 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Concerns\NormalizesNokp;
 use Illuminate\Foundation\Http\FormRequest;
 
 class LookupCertificateRequest extends FormRequest
 {
-    use NormalizesNokp;
-
     public function authorize(): bool
     {
         return true;
@@ -20,7 +17,7 @@ class LookupCertificateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nokp' => $this->nokpRules(),
+            'email' => ['required', 'email', 'max:255'],
         ];
     }
 
@@ -29,6 +26,9 @@ class LookupCertificateRequest extends FormRequest
      */
     public function messages(): array
     {
-        return $this->nokpMessages();
+        return [
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+        ];
     }
 }

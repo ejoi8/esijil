@@ -20,8 +20,8 @@
                         <dd class="v">{{ $registration->participant->full_name }}</dd>
                     </div>
                     <div class="row">
-                        <dt class="k">No. KP</dt>
-                        <dd class="v">{{ $registration->participant->nokp }}</dd>
+                        <dt class="k">Emel</dt>
+                        <dd class="v">{{ $registration->participant->email }}</dd>
                     </div>
                     <div class="row">
                         <dt class="k">Program</dt>

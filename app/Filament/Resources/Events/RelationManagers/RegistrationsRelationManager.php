@@ -10,7 +10,6 @@ use App\Fields\CustomFields;
 use App\Filament\Actions\EmailCertificate;
 use App\Filament\Imports\ParticipantImporter;
 use App\Filament\Resources\Registrations\RegistrationResource;
-use App\Models\Participant;
 use App\Models\Registration;
 use App\Services\Certificates\RegistrationCertificateIssuer;
 use Filament\Actions\Action;
@@ -57,7 +56,6 @@ class RegistrationsRelationManager extends RelationManager
                     ->schema([
                         Select::make('participant_id')
                             ->relationship('participant', 'full_name')
-                            ->getOptionLabelFromRecordUsing(fn (Participant $record): string => "{$record->full_name} ({$record->nokp})")
                             ->searchable()
                             ->preload()
                             ->unique(
@@ -97,9 +95,6 @@ class RegistrationsRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('participant.full_name')
                     ->label('Participant')
-                    ->searchable(),
-                TextColumn::make('participant.nokp')
-                    ->label('No. KP')
                     ->searchable(),
                 TextColumn::make('registered_at')
                     ->dateTime('d M Y H:i')

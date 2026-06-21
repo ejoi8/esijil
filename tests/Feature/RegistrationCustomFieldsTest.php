@@ -47,7 +47,6 @@ it('stores public registration custom fields on the registration', function () {
     $this->post($event->publicRegistrationUrl(), [
         'full_name' => 'Aiman Rahman',
         'email' => 'aiman@example.test',
-        'nokp' => '910202025566',
         'participant_details' => ['membership_status' => 'member'],
         'registration_details' => ['dietary' => 'Vegetarian'],
     ])->assertRedirect();

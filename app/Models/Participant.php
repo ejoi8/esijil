@@ -18,7 +18,6 @@ use Illuminate\Support\Str;
     'external_id',
     'full_name',
     'email',
-    'nokp',
     'phone',
     'details',
 ])]

@@ -43,7 +43,6 @@ it('rejects a public registration when a required checkbox is unchecked', functi
     $this->post($event->publicRegistrationUrl(), [
         'full_name' => 'Aiman',
         'email' => 'aiman@example.test',
-        'nokp' => '910101015555',
         'participant_details' => ['membership_status' => 'member'],
     ])->assertSessionHasErrors('participant_details.consent');
 });
@@ -55,11 +54,10 @@ it('stores a checked checkbox value in participant details', function () {
     $this->post($event->publicRegistrationUrl(), [
         'full_name' => 'Aiman',
         'email' => 'aiman@example.test',
-        'nokp' => '910101015555',
         'participant_details' => ['membership_status' => 'member', 'consent' => '1'],
     ])->assertRedirect();
 
-    expect(Participant::query()->firstWhere('nokp', '910101015555')->details)
+    expect(Participant::query()->firstWhere('email', 'aiman@example.test')->details)
         ->toMatchArray(['consent' => '1']);
 });
 
@@ -81,13 +79,12 @@ it('saves a checkbox custom field via the admin participant form', function () {
         ->fillForm([
             'full_name' => 'Nor',
             'email' => 'nor@example.test',
-            'nokp' => '920202025566',
             'details' => ['membership_status' => 'member', 'newsletter' => true],
         ])
         ->call('create')
         ->assertHasNoFormErrors();
 
-    expect(Participant::query()->firstWhere('nokp', '920202025566')->details)
+    expect(Participant::query()->firstWhere('email', 'nor@example.test')->details)
         ->toMatchArray(['newsletter' => true]);
 });
 

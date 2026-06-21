@@ -1,6 +1,6 @@
 <x-layouts.mono
     :title="'Keputusan Semakan Sijil'"
-    :description="'Halaman keputusan semakan sijil untuk peserta yang telah membuat carian menggunakan No. KP.'"
+    :description="'Halaman keputusan semakan sijil untuk peserta yang telah membuat carian menggunakan emel.'"
     :robots="'noindex,nofollow,noarchive'"
     :canonical="false"
 >
@@ -18,7 +18,7 @@
     <div class="col">
         <p class="kicker">Keputusan Semakan</p>
         <h1>{{ $participant->full_name }}</h1>
-        <p class="lead">No. KP {{ $participant->nokp }} &middot; {{ $registrations->count() }} rekod sijil</p>
+        <p class="lead">{{ $participant->email }} &middot; {{ $registrations->count() }} rekod sijil</p>
 
         <div class="stack">
             <section class="card" aria-label="Senarai sijil">

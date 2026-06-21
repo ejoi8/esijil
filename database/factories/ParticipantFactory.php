@@ -20,7 +20,6 @@ class ParticipantFactory extends Factory
         return [
             'full_name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'nokp' => fake()->unique()->numerify('############'),
             'phone' => fake()->optional()->phoneNumber(),
         ];
     }

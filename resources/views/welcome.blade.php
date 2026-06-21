@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name') }} — Semak &amp; muat turun sijil program PUSPANITA</title>
-    <meta name="description" content="{{ config('app.name') }} ialah sistem sijil digital PUSPANITA. Daftar program melalui pautan jemputan, hadir, kemudian semak dan muat turun sijil anda menggunakan No. KP.">
+    <meta name="description" content="{{ config('app.name') }} ialah sistem sijil digital PUSPANITA. Daftar program melalui pautan jemputan, hadir, kemudian semak dan muat turun sijil anda menggunakan emel.">
     <meta name="robots" content="index,follow">
     <meta name="theme-color" content="#0a0a0a">
     <link rel="canonical" href="{{ route('home') }}">
@@ -13,13 +13,13 @@
     <meta property="og:site_name" content="{{ config('app.name') }}">
     <meta property="og:type" content="website">
     <meta property="og:title" content="{{ config('app.name') }} — Semak &amp; muat turun sijil program PUSPANITA">
-    <meta property="og:description" content="Sistem sijil digital PUSPANITA. Semak dan muat turun sijil program anda menggunakan No. KP.">
+    <meta property="og:description" content="Sistem sijil digital PUSPANITA. Semak dan muat turun sijil program anda menggunakan emel.">
     <meta property="og:url" content="{{ route('home') }}">
     <meta property="og:image" content="{{ url('/images/og/esijil-share.svg') }}">
     <meta property="og:image:alt" content="eSIJIL PUSPANITA">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ config('app.name') }} — Semak &amp; muat turun sijil program PUSPANITA">
-    <meta name="twitter:description" content="Sistem sijil digital PUSPANITA. Semak dan muat turun sijil program anda menggunakan No. KP.">
+    <meta name="twitter:description" content="Sistem sijil digital PUSPANITA. Semak dan muat turun sijil program anda menggunakan emel.">
     <meta name="twitter:image" content="{{ url('/images/og/esijil-share.svg') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -149,7 +149,7 @@
                 <div class="inner">
                     <p class="kicker">Sijil digital PUSPANITA</p>
                     <h1>Sijil program anda, sedia untuk dimuat turun.</h1>
-                    <p class="lead">Semak dan dapatkan sijil rasmi anda dalam format PDF menggunakan No. KP — tanpa borang, tanpa menunggu.</p>
+                    <p class="lead">Semak dan dapatkan sijil rasmi anda dalam format PDF menggunakan emel — tanpa borang, tanpa menunggu.</p>
                     <div class="hero-actions">
                         <a class="btn btn-solid" href="{{ route('certificate-lookup.index') }}">Semak Sijil</a>
                         <a class="linkarrow" href="#cara">
@@ -173,8 +173,8 @@
                         <div class="ico" aria-hidden="true">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
                         </div>
-                        <h3>Semak dengan No. KP</h3>
-                        <p>Masukkan nombor kad pengenalan anda dan sistem akan paparkan setiap sijil yang layak untuk anda.</p>
+                        <h3>Semak dengan emel</h3>
+                        <p>Masukkan alamat emel anda dan sistem akan paparkan setiap sijil yang layak untuk anda.</p>
                     </div>
                     <div class="card">
                         <div class="ico" aria-hidden="true">
@@ -221,7 +221,7 @@
                     <div class="step">
                         <p class="num">04</p>
                         <h3>Semak &amp; muat turun sijil</h3>
-                        <p>Selepas program, semak dengan No. KP dan muat turun sijil PDF anda.</p>
+                        <p>Selepas program, semak dengan emel dan muat turun sijil PDF anda.</p>
                     </div>
                 </div>
             </div>
@@ -235,7 +235,7 @@
                     <h2>Inilah yang anda lihat semasa semakan</h2>
                 </div>
                 <div class="preview">
-                    <div class="preview-card" role="img" aria-label="Contoh rekod sijil untuk Nor Aisyah binti Ramli: No. KP, Program, Tarikh dan Nombor Sijil.">
+                    <div class="preview-card" role="img" aria-label="Contoh rekod sijil untuk Nor Aisyah binti Ramli: Emel, Program, Tarikh dan Nombor Sijil.">
                         <div class="preview-head">
                             <span class="brand-mini">
                                 <x-brand-mark variant="mini" />
@@ -251,7 +251,7 @@
                             <p class="sub">Penerima sijil</p>
                         </div>
                         <div class="rows">
-                            <div class="row"><span class="k">No. KP</span><span class="v">8********-**-****</span></div>
+                            <div class="row"><span class="k">Emel</span><span class="v">n****@email.com</span></div>
                             <div class="row"><span class="k">Program</span><span class="v">Bengkel Kepimpinan PUSPANITA 2026</span></div>
                             <div class="row"><span class="k">Tarikh</span><span class="v">14 Mac 2026</span></div>
                             <div class="row big"><span class="k">Nombor Sijil</span><span class="v">PSP-2026-04821</span></div>
@@ -271,11 +271,11 @@
                 <div class="faq">
                     <details>
                         <summary>Bagaimana saya menyemak sijil saya?<span class="toggle" aria-hidden="true"></span></summary>
-                        <p class="answer">Klik butang Semak Sijil dan masukkan No. KP anda. Sistem akan memaparkan setiap sijil program yang layak untuk anda muat turun.</p>
+                        <p class="answer">Klik butang Semak Sijil dan masukkan emel anda. Sistem akan memaparkan setiap sijil program yang layak untuk anda muat turun.</p>
                     </details>
                     <details>
                         <summary>Adakah saya perlu mendaftar akaun?<span class="toggle" aria-hidden="true"></span></summary>
-                        <p class="answer">Tidak. Pendaftaran program adalah melalui pautan jemputan sahaja, dan semakan sijil hanya memerlukan No. KP anda.</p>
+                        <p class="answer">Tidak. Pendaftaran program adalah melalui pautan jemputan sahaja, dan semakan sijil hanya memerlukan emel anda.</p>
                     </details>
                     <details>
                         <summary>Saya tidak menerima pautan jemputan. Apa patut saya buat?<span class="toggle" aria-hidden="true"></span></summary>
@@ -298,7 +298,7 @@
             <div class="wrap">
                 <div class="cta">
                     <h2>Sijil anda menanti.</h2>
-                    <p>Semak dengan No. KP anda dan muat turun sijil program dalam beberapa saat.</p>
+                    <p>Semak dengan emel anda dan muat turun sijil program dalam beberapa saat.</p>
                     <div class="acts">
                         <a class="btn btn-white" href="{{ route('certificate-lookup.index') }}">Semak Sijil</a>
                         <a class="linkarrow on-dark" href="#cara">

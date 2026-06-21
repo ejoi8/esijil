@@ -29,9 +29,6 @@ class IssuedCertificatesRelationManager extends RelationManager
                 TextColumn::make('participant.full_name')
                     ->label('Participant')
                     ->searchable(),
-                TextColumn::make('participant.nokp')
-                    ->label('No. KP')
-                    ->searchable(),
                 TextColumn::make('certificateTemplate.name')
                     ->label('Certificate Template')
                     ->placeholder('-')

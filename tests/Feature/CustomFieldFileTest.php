@@ -42,7 +42,6 @@ function fileRegistrationPayload(UploadedFile $file): array
     return [
         'full_name' => 'Aiman',
         'email' => 'aiman@example.test',
-        'nokp' => '910101015555',
         'participant_details' => [
             'membership_status' => 'member',
             'ic_copy' => $file,
@@ -59,7 +58,7 @@ it('stores a public file upload on the private disk', function () {
         UploadedFile::fake()->create('ic.pdf', 100, 'application/pdf'),
     ))->assertRedirect();
 
-    $path = Participant::query()->firstWhere('nokp', '910101015555')->details['ic_copy'];
+    $path = Participant::query()->firstWhere('email', 'aiman@example.test')->details['ic_copy'];
 
     expect($path)->toStartWith('custom-fields/')
         ->and(Storage::disk('local')->exists($path))->toBeTrue();

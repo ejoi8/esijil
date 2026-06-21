@@ -20,13 +20,15 @@ class CertificateLookupController extends Controller
 
     public function search(LookupCertificateRequest $request): RedirectResponse
     {
+        $email = (string) $request->validated('email');
+
         $participant = Participant::query()
-            ->where('nokp', $request->nokp())
+            ->where('email', $email)
             ->first();
 
         if ($participant === null) {
             Log::info('certificate.lookup_miss', [
-                'nokp_hash' => hash('sha256', $request->nokp()),
+                'email_hash' => hash('sha256', mb_strtolower($email)),
                 'ip' => $request->ip(),
             ]);
 
@@ -35,7 +37,7 @@ class CertificateLookupController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'nokp' => 'No certificate record was found for that No. KP.',
+                    'email' => 'No certificate record was found for that email.',
                 ]);
         }
 

@@ -5,7 +5,6 @@ namespace App\Filament\Imports;
 use App\Enums\RegistrationSource;
 use App\Models\Participant;
 use App\Models\Registration;
-use App\Support\Nokp;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
@@ -30,10 +29,6 @@ class ParticipantImporter extends Importer
             ImportColumn::make('full_name')
                 ->requiredMapping()
                 ->rules(['required', 'string', 'max:255']),
-            ImportColumn::make('nokp')
-                ->requiredMapping()
-                ->castStateUsing(fn (mixed $state): ?string => filled($state) ? Nokp::digits((string) $state) : null)
-                ->rules(['required', 'string', 'max:50']),
             ImportColumn::make('email')
                 ->requiredMapping()
                 ->rules(['required', 'email', 'max:255']),
@@ -50,15 +45,15 @@ class ParticipantImporter extends Importer
 
         $query = Participant::query()->where('organization_id', $organizationId);
 
-        // Upsert: an imported external_id wins (e.g. staff card), else NOKP.
+        // Upsert: an imported external_id wins (e.g. staff card), else email.
         $existing = null;
 
         if (filled($this->data['external_id'] ?? null)) {
             $existing = (clone $query)->where('external_id', $this->data['external_id'])->first();
         }
 
-        if ($existing === null && filled($this->data['nokp'] ?? null)) {
-            $existing = (clone $query)->where('nokp', $this->data['nokp'])->first();
+        if ($existing === null && filled($this->data['email'] ?? null)) {
+            $existing = (clone $query)->where('email', $this->data['email'])->first();
         }
 
         return $existing ?? Participant::make(['organization_id' => $organizationId]);

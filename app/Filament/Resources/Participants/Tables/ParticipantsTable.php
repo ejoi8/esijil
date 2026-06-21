@@ -26,10 +26,6 @@ class ParticipantsTable
                 TextColumn::make('email')
                     ->label('Email')
                     ->searchable(),
-                TextColumn::make('nokp')
-                    ->label('No. KP')
-                    ->sortable()
-                    ->searchable(),
                 TextColumn::make('phone')
                     ->searchable(),
                 ...CustomFields::tableColumns(CustomFieldEntity::Participant),

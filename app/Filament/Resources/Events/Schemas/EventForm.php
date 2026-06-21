@@ -139,6 +139,13 @@ class EventForm
                             ->label('Registration open')
                             ->helperText('Off: public page shows a closed message and rejects sign-ups.')
                             ->columnSpanFull(),
+                        TextInput::make('capacity')
+                            ->label('Seat capacity')
+                            ->numeric()
+                            ->minValue(1)
+                            ->placeholder('Unlimited')
+                            ->helperText('Max public sign-ups; leave blank for unlimited. Admin & import are not capped.')
+                            ->columnSpanFull(),
                         TextEntry::make('public_registration_guidance')
                             ->hiddenLabel()
                             ->state(function (?Event $record, Get $get): string {

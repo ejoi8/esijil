@@ -24,7 +24,7 @@ it('restores a soft-deleted participant and registration instead of duplicating 
         'status' => EventStatus::Published,
         'registration_open' => true,
     ]);
-    $participant = Participant::factory()->create(['nokp' => '900101015555']);
+    $participant = Participant::factory()->create(['email' => 'siti@example.test']);
     $registration = Registration::factory()->for($participant)->for($event)->create();
 
     $registration->delete();
@@ -33,20 +33,19 @@ it('restores a soft-deleted participant and registration instead of duplicating 
     $this->post($event->publicRegistrationUrl(), [
         'full_name' => 'Siti Puspanita',
         'email' => 'siti@example.test',
-        'nokp' => '900101015555',
         'phone' => '0123456789',
         'participant_details' => ['membership_status' => 'member'],
     ])
         ->assertRedirect()
         ->assertSessionHas('registration_exists');
 
-    expect(Participant::query()->where('nokp', '900101015555')->count())->toBe(1)
+    expect(Participant::query()->where('email', 'siti@example.test')->count())->toBe(1)
         ->and(Registration::query()->where('event_id', $event->id)->where('participant_id', $participant->id)->count())->toBe(1)
         // The trashed rows were restored (not freshly inserted)...
-        ->and(Participant::onlyTrashed()->where('nokp', '900101015555')->doesntExist())->toBeTrue()
+        ->and(Participant::onlyTrashed()->where('email', 'siti@example.test')->doesntExist())->toBeTrue()
         ->and(Registration::onlyTrashed()->where('event_id', $event->id)->doesntExist())->toBeTrue()
         // ...and the restored participant was updated from the submission.
-        ->and(Participant::query()->where('nokp', '900101015555')->value('full_name'))->toBe('Siti Puspanita');
+        ->and(Participant::query()->where('email', 'siti@example.test')->value('full_name'))->toBe('Siti Puspanita');
 
     Notification::assertNothingSent();
 });

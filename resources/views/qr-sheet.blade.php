@@ -37,7 +37,9 @@
             @if ($participant)
                 <div class="card">
                     <div class="name">{{ $participant->full_name }}</div>
-                    <div class="meta">{{ $participant->external_id ?: $participant->nokp }}</div>
+                    @if ($participant->external_id)
+                        <div class="meta">{{ $participant->external_id }}</div>
+                    @endif
                     <img src="{{ \App\Support\QrCode::dataUri($participant->public_token) }}" alt="Kod QR {{ $participant->full_name }}">
                 </div>
             @endif

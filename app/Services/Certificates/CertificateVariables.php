@@ -23,7 +23,6 @@ class CertificateVariables
     {
         $core = [
             'participant_name' => 'Participant full name',
-            'participant_nokp' => 'Participant No. KP',
             'event_title' => 'Event / program title',
             'event_description' => 'Event description',
             'date_line' => 'Date line',

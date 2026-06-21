@@ -5,14 +5,11 @@ namespace App\Http\Requests;
 use App\Enums\CustomFieldEntity;
 use App\Enums\CustomFieldType;
 use App\Fields\CustomFields;
-use App\Http\Requests\Concerns\NormalizesNokp;
 use App\Models\Event;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEventRegistrationRequest extends FormRequest
 {
-    use NormalizesNokp;
-
     public function authorize(): bool
     {
         return true;
@@ -27,7 +24,6 @@ class StoreEventRegistrationRequest extends FormRequest
             [
                 'full_name' => ['required', 'string', 'max:255'],
                 'email' => ['required', 'email', 'max:255'],
-                'nokp' => $this->nokpRules(),
                 'phone' => ['nullable', 'string', 'max:50'],
             ],
             CustomFields::rules(CustomFieldEntity::Participant, 'public', 'participant_details', $this->event()),
@@ -100,14 +96,6 @@ class StoreEventRegistrationRequest extends FormRequest
     }
 
     /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return $this->nokpMessages();
-    }
-
-    /**
      * @return array<string, string|null>
      */
     public function participantData(): array
@@ -115,7 +103,6 @@ class StoreEventRegistrationRequest extends FormRequest
         return [
             'full_name' => (string) $this->input('full_name'),
             'email' => (string) $this->input('email'),
-            'nokp' => $this->nokp(),
             'phone' => $this->filled('phone') ? (string) $this->input('phone') : null,
         ];
     }

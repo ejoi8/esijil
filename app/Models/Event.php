@@ -31,6 +31,7 @@ use Illuminate\Support\Str;
     'venue',
     'organizer_name',
     'registration_open',
+    'capacity',
     'status',
     'certificate_template_id',
     'modules',
@@ -49,6 +50,7 @@ class Event extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'registration_open' => 'boolean',
+            'capacity' => 'integer',
             'status' => EventStatus::class,
             'modules' => 'array',
             'scan_match_mode' => ScanMatchMode::class,
@@ -117,6 +119,23 @@ class Event extends Model
     public function hasModule(EventModule $module): bool
     {
         return in_array($module->value, $this->modules ?? [], true);
+    }
+
+    /** Active (non-cancelled) registrations — what a seat capacity counts. */
+    public function seatsTaken(): int
+    {
+        return $this->registrations()->count();
+    }
+
+    /** Seats left, or null when there is no capacity set (unlimited). */
+    public function seatsRemaining(): ?int
+    {
+        return $this->capacity === null ? null : max(0, $this->capacity - $this->seatsTaken());
+    }
+
+    public function isFull(): bool
+    {
+        return $this->capacity !== null && $this->seatsTaken() >= $this->capacity;
     }
 
     public function scannerStations(): HasMany

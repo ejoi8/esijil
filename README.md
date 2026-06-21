@@ -19,7 +19,7 @@ The current application supports:
 - registration management
 - certificate template management with a pdfme-based designer
 - certificate PDF generation and download
-- public certificate lookup by `nokp`
+- public certificate lookup by email
 - public event registration through signed links
 - application settings for SMTP mail and notification controls
 - queued registration confirmation notifications
@@ -142,14 +142,7 @@ Public event registration requires:
 Certificate lookup POST requests are throttled in [AppServiceProvider.php](app/Providers/AppServiceProvider.php):
 
 - `5` requests per minute
-- keyed by `ip + sha1(nokp)`
-
-### NOKP normalization
-
-Public lookup and registration normalize `nokp` to digits only in:
-
-- [LookupCertificateRequest.php](app/Http/Requests/LookupCertificateRequest.php)
-- [StoreEventRegistrationRequest.php](app/Http/Requests/StoreEventRegistrationRequest.php)
+- keyed by `ip + sha1(email)`
 
 ## Application Settings And Mail
 
