@@ -1,11 +1,11 @@
 # eSIJIL
 
-eSIJIL is a Laravel 13 + Filament 5 application for managing events, participants, registrations, certificate templates, and certificate PDF issuance.
+eSIJIL is a Laravel 13 + Filament 5, multi-tenant (per-organization) platform for the full event lifecycle — **register → attend → certify**: public event registration, QR-code attendance check-in, and verifiable digital certificates.
 
 The app has two main surfaces:
 
-- a Filament admin panel at `/auth`
-- a public surface for certificate lookup and signed event registration
+- a Filament admin panel at `/auth` (multi-tenant, scoped to the active organization)
+- a public surface for event registration, QR attendance scanning, certificate lookup, and indexable event/organizer pages
 
 See [AI_HANDOVER.md](AI_HANDOVER.md) for a compact project brief aimed at future AI agents.
 
@@ -13,17 +13,19 @@ See [AI_HANDOVER.md](AI_HANDOVER.md) for a compact project brief aimed at future
 
 The current application supports:
 
-- branch management
-- participant management
-- event management
+- multi-tenant organizations (each tenant owns its own events, participants, registrations and custom fields)
+- event management with per-event **seat capacity** (an opt-in hard cap on public sign-ups)
+- minimal participant records (full name, email, phone) extended by **custom fields** — IC / no. KP is a custom field, not a column
 - registration management
+- public event registration through signed links, with per-event custom fields
+- **QR-code attendance check-in** via scanner stations (review/fast modes, hashed station PIN, member bypass)
 - certificate template management with a pdfme-based designer
-- certificate PDF generation and download
-- public certificate lookup by email
-- public event registration through signed links
+- certificate PDF generation, download, and public lookup/verification by email
+- public, opt-in, indexable event landing pages, organizer profiles, and a Bahasa-Melayu content hub (SEO)
 - application settings for SMTP mail and notification controls
 - queued registration confirmation notifications
 - email log viewing and resend support in Filament
+- a high-volume demo data seeder (`esijil:seed-demo`)
 - legacy import and normalization seeders
 
 ## Tech Stack
@@ -38,6 +40,7 @@ The current application supports:
 - ejoi8 Filament Email Logs
 - pdfme for template design
 - DomPDF for server-side certificate PDF downloads
+- html5-qrcode (CDN) for the QR attendance scanner
 
 ## Main Surfaces
 
@@ -49,10 +52,14 @@ Current resources:
 
 - `BranchResource`
 - `ParticipantResource`
-- `EventResource`
+- `EventResource` (with relation managers for registrations, scanner stations and issued certificates)
 - `RegistrationResource`
 - `CertificateTemplateResource`
+- `CustomFieldResource`
+- `MemberResource`
 - `EmailLogResource` from `ejoi8/filament-email-logs`
+
+The panel is multi-tenant: it is scoped to the active organization, while a platform admin can access all organizations.
 
 Navigation groups:
 
@@ -72,24 +79,40 @@ Public routes live in [routes/web.php](routes/web.php).
 
 Current public flows:
 
-- `GET /` - landing page
+- `GET /` - landing page (platform marketing)
+- `GET /robots.txt`, `GET /sitemap.xml` - route-served crawl directives + sitemap of indexable surfaces
+- `GET /acara` - public events directory (lists all opt-in published events; searchable + paginated, with `schema.org/ItemList`)
+- `GET /e/{event:slug}` - public, opt-in event landing page (only when the event is published and `listed`), with `schema.org/Event` JSON-LD
+- `GET /o/{organization}` - public organizer / issuer profile listing the org's opt-in events
+- `GET /panduan`, `GET /panduan/{slug}` - Bahasa-Melayu content hub (SEO guides)
 - `GET /semakan` - certificate lookup form
 - `POST /semakan` - lookup submit, throttled by `certificate-lookup`
 - `GET /semakan/keputusan` - lookup result page
+- `GET /semakan/sijil/{serial}` - public certificate verification (noindex)
 - `GET /certificates/{registration}/download` - download a registration certificate after a valid lookup session
+- `GET /scan/{stationToken}` - scanner station page (QR check-in)
+- `GET /r/{publicToken}` - participant attendance pass / status (noindex)
 - `GET /events/{event}/register` - signed event registration page
-- `POST /events/{event}/register` - signed event registration submit
+- `POST /events/{event}/register` - signed event registration submit, throttled by `event-registration`
 - `GET /registrations/{registration}/success` - registration success page
 - `GET /registrations/{registration}/certificate` - certificate download for the current registration session
+
+API routes ([routes/api.php](routes/api.php)):
+
+- `POST /api/scan` - stateless check-in scan (station-token auth; `confirm=false` identifies only, `confirm=true` records the check-in), throttled by `scan`
+- `POST /api/scan/verify` - up-front station-PIN check for the scanner gate, throttled by `scan-verify`
 
 ## Domain Model
 
 Core models:
 
+- `Organization` - the tenant; all tenant-owned models belong to one organization (users belong to many)
 - `Branch` - participant grouping / directory metadata
-- `Participant` - a person who can join events
-- `Event` - an event with schedule, status, registration window, and an optional certificate template
-- `Registration` - the participant-to-event record, including issued certificate data
+- `Participant` - a person who can join events; a minimal record (full name, email, phone) extended by custom fields
+- `Event` - an event with schedule, status, registration window, optional seat `capacity`, an optional certificate template, and an opt-in public `listed` flag
+- `Registration` - the participant-to-event record, including attendance and issued certificate data
+- `ScannerStation` - a per-event QR check-in device authorized by a token (+ optional hashed PIN)
+- `CustomField` - per-organization / per-event custom fields for participants, registrations and events
 - `CertificateTemplate` - reusable certificate template metadata, schema, and `pdfme_template`
 
 Important current state:
@@ -143,6 +166,29 @@ Certificate lookup POST requests are throttled in [AppServiceProvider.php](app/P
 
 - `5` requests per minute
 - keyed by `ip + sha1(email)`
+
+## Attendance & QR check-in
+
+Events with the `attendance` module use **scanner stations** — per-event scanning devices authorized by an unguessable token in the URL (`/scan/{stationToken}`). Scans are recorded through the stateless `/api/scan` endpoint.
+
+- **Review vs Fast mode** — the scanner page (remembered per device) defaults to *Semak* (review): a scan shows the participant + their registration details and waits for a manual "Daftar Masuk"; *Auto* mode checks in instantly for busy gates.
+- **Identify vs check-in** — `/api/scan` with `confirm=false` only identifies (no write); `confirm=true` records the check-in (idempotent). Identify reads are audit-logged (`scan.identify`).
+- **Station PIN** — a station may carry a PIN. It is stored **hashed**, gates the scanner, and is enforced on every `/api/scan` call. `/api/scan/verify` checks it up front so a wrong PIN never opens the camera. Logged-in members of the event's organization **bypass** the prompt via a signed, station-scoped token, so the raw PIN is never sent to the client.
+- **Scan match mode** — an event matches scans either by the platform QR token (`participant.public_token`) or an external id (`participant.external_id`, e.g. IC / staff card).
+
+## Seat capacity (stock control)
+
+Each event has an optional `capacity` — blank means unlimited. The **public** registration form consumes a seat per active (non-soft-deleted) registration and hard-blocks new sign-ups once full (the page shows "Baki X tempat" / "Pendaftaran penuh"). The admin panel and CSV import are **not** capped, a returning participant who already holds a seat is never blocked, and the check locks the event row to stay concurrency-safe.
+
+## Public site & SEO
+
+Beyond the registration/lookup flows, the public surface is built for organic discovery:
+
+- **Events directory** (`/acara`) lists every opt-in published event across organizations (searchable, paginated, `schema.org/ItemList`). **Event landing pages** (`/e/{slug}`) and **organizer profiles** (`/o/{organization}`) are opt-in via the event's `listed` toggle (default off), carry `schema.org` JSON-LD, and appear in `/sitemap.xml`.
+- **Content hub** (`/panduan`) — file-based Bahasa-Melayu guides ([app/Support/Guides.php](app/Support/Guides.php) + content views) with Article JSON-LD.
+- `/robots.txt` and `/sitemap.xml` are route-served (so absolute URLs follow `APP_URL`); `/auth`, `/scan` and `/dev` are disallowed, and the noindexed verify/status/success pages are excluded.
+- A config-gated "powered by {app}" referral link appears on the registration success page (`config('seo.referral_cta')`, env `SEO_REFERRAL_CTA`).
+- Public branding derives from `config('app.name')`, so the public chrome is tenant-neutral and rename-ready.
 
 ## Application Settings And Mail
 
@@ -293,6 +339,14 @@ Other seeders in the repo:
 - `DemoDataSeeder`
 - `RefreshLegacyEsijilSeeder`
 
+For large, realistic demo data, use the dedicated command (bulk native inserts, no Eloquent):
+
+```bash
+php artisan esijil:seed-demo
+```
+
+It **TRUNCATES the tenant tables**, then seeds organizations, events (covering registration / attendance / certificate combinations and both scan match modes), participants, registrations, attendance and per-event custom fields. A super admin `admin@admin.com` / `password` is created and added to every demo org; demo scanner stations use the PIN `123456`. Flags: `--organizations`, `--events`, `--registrations`, `--participants`, `--force`.
+
 ## Local Development
 
 ### Prerequisites
@@ -358,6 +412,8 @@ Useful focused files:
 
 - `tests/Feature/CertificateLookupTest.php`
 - `tests/Feature/EventRegistrationTest.php`
+- `tests/Feature/AttendanceScanTest.php`
+- `tests/Feature/PublicSeoTest.php`
 - `tests/Feature/MailSettingsTest.php`
 - `tests/Feature/EventResourceTest.php`
 - `tests/Feature/CertificateTemplateManagementTest.php`
@@ -366,10 +422,14 @@ Useful focused files:
 ## Key Files
 
 - [routes/web.php](routes/web.php)
+- [routes/api.php](routes/api.php)
 - [app/Models/Event.php](app/Models/Event.php)
 - [app/Models/Registration.php](app/Models/Registration.php)
 - [app/Http/Controllers/CertificateLookupController.php](app/Http/Controllers/CertificateLookupController.php)
 - [app/Http/Controllers/EventRegistrationController.php](app/Http/Controllers/EventRegistrationController.php)
+- [app/Http/Controllers/ScanController.php](app/Http/Controllers/ScanController.php)
+- [app/Http/Controllers/SitemapController.php](app/Http/Controllers/SitemapController.php)
+- [app/Console/Commands/SeedDemoData.php](app/Console/Commands/SeedDemoData.php)
 - [app/Services/Certificates/PdfmeCertificateRenderer.php](app/Services/Certificates/PdfmeCertificateRenderer.php)
 - [app/Filament/Resources/Events](app/Filament/Resources/Events)
 - [app/Filament/Resources/CertificateTemplates](app/Filament/Resources/CertificateTemplates)
