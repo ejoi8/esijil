@@ -33,6 +33,7 @@ class ScannerStation extends Model
         return [
             'active' => 'boolean',
             'expires_at' => 'datetime',
+            'pin' => 'hashed',
         ];
     }
 

@@ -14,6 +14,8 @@ use App\Models\ScannerStation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Resolves a scanned code to a participant and (optionally) records the check-in.
@@ -43,7 +45,7 @@ class ScanController extends Controller
             ], 401);
         }
 
-        if (! $this->pinMatches($station, (string) $request->string('pin'))) {
+        if (! $this->pinAuthorized($station, $request)) {
             return response()->json([
                 'ok' => false,
                 'status' => 'pin_invalid',
@@ -74,6 +76,17 @@ class ScanController extends Controller
                 'ok' => false,
                 'status' => 'invalid',
                 'message' => 'Kod tidak ditemui untuk program ini.',
+            ]);
+        }
+
+        // Identify-only reads expose participant data without recording anything,
+        // so log them to keep the disclosure auditable.
+        if (! $confirm) {
+            Log::info('scan.identify', [
+                'station_id' => $station->id,
+                'event_id' => $event->id,
+                'registration_id' => $registration->id,
+                'mode' => $event->scan_match_mode->value,
             ]);
         }
 
@@ -129,6 +142,7 @@ class ScanController extends Controller
         $request->validate([
             'station_token' => ['required', 'string'],
             'pin' => ['nullable', 'string', 'max:20'],
+            'bypass' => ['nullable', 'string'],
         ]);
 
         $station = $this->resolveStation((string) $request->string('station_token'));
@@ -137,7 +151,7 @@ class ScanController extends Controller
             return response()->json(['ok' => false], 401);
         }
 
-        $ok = $this->pinMatches($station, (string) $request->string('pin'));
+        $ok = $this->pinAuthorized($station, $request);
 
         return response()->json(['ok' => $ok], $ok ? 200 : 403);
     }
@@ -159,10 +173,32 @@ class ScanController extends Controller
         return $station;
     }
 
-    /** A station with no PIN is open; otherwise the supplied PIN must match. */
-    private function pinMatches(ScannerStation $station, string $pin): bool
+    /**
+     * A station with no PIN is open; otherwise the request must carry the correct
+     * PIN (checked against the stored hash) or a valid member bypass token issued
+     * by the scanner page to a logged-in organization member.
+     */
+    private function pinAuthorized(ScannerStation $station, Request|ScanRequest $request): bool
     {
-        return ! filled($station->pin) || hash_equals((string) $station->pin, $pin);
+        if (! filled($station->pin)) {
+            return true;
+        }
+
+        $pin = (string) $request->string('pin');
+        if ($pin !== '' && Hash::check($pin, (string) $station->pin)) {
+            return true;
+        }
+
+        $bypass = (string) $request->string('bypass');
+        if ($bypass !== '') {
+            try {
+                return hash_equals('scan-bypass:'.$station->id, (string) decrypt($bypass));
+            } catch (\Throwable) {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     /**

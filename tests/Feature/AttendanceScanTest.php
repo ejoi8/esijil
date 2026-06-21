@@ -144,32 +144,55 @@ it('verifies the station PIN at the gate before the scanner opens', function () 
         ->assertStatus(401)->assertJson(['ok' => false]);
 });
 
-it('embeds the PIN for a logged-in org member but not for guests or outsiders', function () {
+it('gates non-members with the PIN and gives members a bypass token (never the raw PIN)', function () {
     // Own organization + event so membership is unambiguous (the harness auto-joins
     // factory users to a default org, which would otherwise muddy "non-member").
     $org = Organization::factory()->create();
     $event = Event::factory()->create(['organization_id' => $org->id, 'modules' => ['attendance']]);
     $station = ScannerStation::factory()->for($event)->create(['pin' => '4823']);
 
-    // Guest: PIN required, PIN not embedded / not in the markup.
+    // Guest: PIN required, no bypass, and the raw PIN never appears (it is hashed).
     $this->get(route('scan.show', $station->token))
         ->assertOk()
         ->assertViewHas('pinRequired', true)
-        ->assertViewHas('embeddedPin', null)
+        ->assertViewHas('bypass', null)
         ->assertDontSee('4823');
 
-    // Member of the event's organization: PIN embedded, no prompt.
+    // Member of the event's organization: no prompt, gets a bypass token (not the PIN).
     $member = User::factory()->create();
     $member->organizations()->syncWithoutDetaching([$org->id]);
-    $this->actingAs($member)->get(route('scan.show', $station->token))
+    $res = $this->actingAs($member)->get(route('scan.show', $station->token))
         ->assertOk()
         ->assertViewHas('pinRequired', false)
-        ->assertViewHas('embeddedPin', '4823');
+        ->assertDontSee('4823');
+    expect($res->viewData('bypass'))->not->toBeNull();
 
     // Logged-in user who is NOT in the event's organization is treated like a guest.
     $outsider = User::factory()->create();
     $this->actingAs($outsider)->get(route('scan.show', $station->token))
         ->assertViewHas('pinRequired', true)
-        ->assertViewHas('embeddedPin', null)
+        ->assertViewHas('bypass', null)
         ->assertDontSee('4823');
+});
+
+it('authorizes a scan with a member bypass token instead of the PIN', function () {
+    $org = Organization::factory()->create();
+    $event = Event::factory()->create(['organization_id' => $org->id, 'modules' => ['attendance']]);
+    $station = ScannerStation::factory()->for($event)->create(['pin' => '4823']);
+    $participant = Participant::factory()->create(['organization_id' => $org->id]);
+    Registration::factory()->for($event)->for($participant)->create(['checked_in_at' => null]);
+
+    $member = User::factory()->create();
+    $member->organizations()->syncWithoutDetaching([$org->id]);
+    $bypass = $this->actingAs($member)->get(route('scan.show', $station->token))->viewData('bypass');
+
+    $base = ['station_token' => $station->token, 'code' => $participant->public_token];
+
+    // A wrong PIN and no bypass is rejected...
+    $this->postJson(route('api.scan'), $base + ['pin' => '0000'])
+        ->assertStatus(403)->assertJson(['status' => 'pin_invalid']);
+
+    // ...but the member's bypass token authorizes the check-in without the PIN.
+    $this->postJson(route('api.scan'), $base + ['bypass' => $bypass])
+        ->assertOk()->assertJson(['status' => 'present']);
 });

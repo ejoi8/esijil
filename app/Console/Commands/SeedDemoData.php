@@ -38,6 +38,9 @@ class SeedDemoData extends Command
 
     protected $description = 'Seed realistic high-volume demo data (orgs, events, participants, registrations, attendance, certificates) via bulk native inserts. TRUNCATES tenant tables first.';
 
+    /** Memoized bcrypt hash of the demo station PIN ("123456"), reused across stations. */
+    private ?string $demoPinHash = null;
+
     /** Tenant tables wiped before seeding. `users` is deliberately excluded. Child-first order. */
     private const TENANT_TABLES = [
         'registrations', 'scanner_stations', 'custom_fields',
@@ -199,7 +202,7 @@ class SeedDemoData extends Command
                         $stationRows[] = [
                             'id' => $stationId, 'organization_id' => $o, 'event_id' => $eventId,
                             'token' => 'STN'.str_pad((string) $stationId, 37, '0', STR_PAD_LEFT),
-                            'pin' => str_pad((string) mt_rand(0, 999999), 6, '0', STR_PAD_LEFT),
+                            'pin' => $this->demoPinHash ??= Hash::make('123456'),
                             'label' => "Pintu {$k}", 'active' => 1, 'expires_at' => null,
                             'created_at' => $now, 'updated_at' => $now,
                         ];

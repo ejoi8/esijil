@@ -70,14 +70,12 @@
         const VERIFY_URL = @json(route('api.scan.verify'));
         const STATION_TOKEN = @json($station->token);
         const PIN_REQUIRED = @json($pinRequired);
+        const BYPASS = @json($bypass);
         const PIN_KEY = 'esijil_scan_pin_' + STATION_TOKEN.slice(0, 12);
 
-        // Members get the PIN embedded; otherwise reuse a PIN entered earlier on
-        // this device, else null until the gate collects one.
-        let pin = @json($embeddedPin);
-        if (pin === null && PIN_REQUIRED) {
-            pin = localStorage.getItem(PIN_KEY);
-        }
+        // Members scan with a signed bypass token (no PIN). Non-members reuse a PIN
+        // entered earlier on this device, else null until the gate collects one.
+        let pin = PIN_REQUIRED ? localStorage.getItem(PIN_KEY) : null;
 
         const panel = document.getElementById('panel');
         const hint = document.getElementById('hint');
@@ -210,7 +208,7 @@
             const res = await fetch(SCAN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ station_token: STATION_TOKEN, code: code, pin: pin, confirm: confirm }),
+                body: JSON.stringify({ station_token: STATION_TOKEN, code: code, pin: pin, bypass: BYPASS, confirm: confirm }),
             });
             // Distinguish throttling / server errors from the JSON {ok,status} the
             // app returns (401/403 still carry a status we want to read).

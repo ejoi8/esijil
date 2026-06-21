@@ -27,6 +27,8 @@ class ScanRequest extends FormRequest
             'pin' => ['nullable', 'string', 'max:20'],
             // false = identify only (no write); true/absent = record the check-in.
             'confirm' => ['sometimes', 'boolean'],
+            // Member bypass token from the scanner page (alternative to the PIN).
+            'bypass' => ['nullable', 'string'],
         ];
     }
 }

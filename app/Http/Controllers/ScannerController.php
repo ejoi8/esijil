@@ -35,10 +35,11 @@ class ScannerController extends Controller
         return view('scanner.show', [
             'station' => $station,
             'event' => $station->event,
-            // Non-members must enter the PIN (when the station has one); members
-            // get it embedded so they skip the prompt.
+            // Non-members must enter the PIN (when the station has one). Members
+            // get a signed bypass token instead of the raw PIN, so the hashed PIN
+            // is never exposed; /api/scan verifies the token server-side.
             'pinRequired' => filled($station->pin) && ! $isMember,
-            'embeddedPin' => $isMember ? (string) $station->pin : null,
+            'bypass' => ($isMember && filled($station->pin)) ? encrypt('scan-bypass:'.$station->id) : null,
         ]);
     }
 }
