@@ -61,6 +61,12 @@
                     </a>
                 </div>
             </section>
+
+            @if (config('seo.referral_cta'))
+                <p class="hint" style="text-align:center">
+                    Dikuasakan oleh <a href="{{ route('home') }}">{{ config('app.name') }}</a> — sistem pendaftaran, kehadiran &amp; sijil.
+                </p>
+            @endif
         </div>
     </div>
 </x-layouts.mono>

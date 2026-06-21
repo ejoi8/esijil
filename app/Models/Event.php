@@ -32,6 +32,7 @@ use Illuminate\Support\Str;
     'organizer_name',
     'registration_open',
     'capacity',
+    'listed',
     'status',
     'certificate_template_id',
     'modules',
@@ -51,6 +52,7 @@ class Event extends Model
             'ends_at' => 'datetime',
             'registration_open' => 'boolean',
             'capacity' => 'integer',
+            'listed' => 'boolean',
             'status' => EventStatus::class,
             'modules' => 'array',
             'scan_match_mode' => ScanMatchMode::class,
@@ -64,6 +66,10 @@ class Event extends Model
         static::creating(function (Event $event): void {
             if (blank($event->public_id)) {
                 $event->public_id = static::generatePublicId();
+            }
+
+            if (blank($event->slug)) {
+                $event->slug = static::generateSlug($event->title, $event->public_id);
             }
 
             if ($event->modules === null) {
@@ -83,6 +89,14 @@ class Event extends Model
         } while (static::query()->where('public_id', $token)->exists());
 
         return $token;
+    }
+
+    /** A readable, unique URL slug for the public event landing page (/e/{slug}). */
+    protected static function generateSlug(?string $title, string $publicId): string
+    {
+        $base = Str::slug((string) $title) ?: 'acara';
+
+        return $base.'-'.Str::lower(Str::substr($publicId, 0, 8));
     }
 
     public function creator(): BelongsTo

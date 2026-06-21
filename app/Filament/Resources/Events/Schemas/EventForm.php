@@ -146,6 +146,10 @@ class EventForm
                             ->placeholder('Unlimited')
                             ->helperText('Max public sign-ups; leave blank for unlimited. Admin & import are not capped.')
                             ->columnSpanFull(),
+                        Toggle::make('listed')
+                            ->label('List publicly (discoverable in search)')
+                            ->helperText('On: a public landing page (/e/…) becomes indexable by search engines. Off (default): the event stays unlisted — reachable only via the shared link.')
+                            ->columnSpanFull(),
                         TextEntry::make('public_registration_guidance')
                             ->hiddenLabel()
                             ->state(function (?Event $record, Get $get): string {

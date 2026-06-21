@@ -3,15 +3,20 @@
 use App\Http\Controllers\AdminRegistrationCertificateDownloadController;
 use App\Http\Controllers\CertificateLookupController;
 use App\Http\Controllers\CustomFieldFileController;
+use App\Http\Controllers\EventLandingController;
 use App\Http\Controllers\EventQrSheetController;
 use App\Http\Controllers\EventRegistrationController;
 use App\Http\Controllers\ParticipantStatusController;
 use App\Http\Controllers\ScannerController;
+use App\Http\Controllers\SitemapController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+Route::get('/sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
+Route::get('/e/{event:slug}', [EventLandingController::class, 'show'])->name('events.landing');
 Route::get('/semakan', [CertificateLookupController::class, 'index'])->name('certificate-lookup.index');
 Route::post('/semakan', [CertificateLookupController::class, 'search'])
     ->middleware('throttle:certificate-lookup')
