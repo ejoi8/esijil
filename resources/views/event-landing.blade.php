@@ -51,7 +51,13 @@
                     </div>
                     <div class="row">
                         <dt class="k">Anjuran</dt>
-                        <dd class="v">{{ $event->organizer_name }}</dd>
+                        <dd class="v">
+                            @if ($event->organization)
+                                <a href="{{ route('organizations.landing', $event->organization->slug) }}">{{ $event->organizer_name }}</a>
+                            @else
+                                {{ $event->organizer_name }}
+                            @endif
+                        </dd>
                     </div>
                 </dl>
 
