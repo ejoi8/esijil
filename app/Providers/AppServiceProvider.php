@@ -111,9 +111,18 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(30)->by($request->ip());
         });
 
-        // Per-station check-in throttle for the scan hot path.
-        RateLimiter::for('scan', function (Request $request): Limit {
-            return Limit::perMinute(120)->by((string) $request->input('station_token'));
+        // Per-station check-in throttle for the scan hot path. A standalone PIN
+        // attempt (a pin without a valid member bypass) additionally gets the
+        // tight, IP-aware limit, so the gate can't be brute-forced via /api/scan.
+        RateLimiter::for('scan', function (Request $request): array {
+            $token = (string) $request->input('station_token');
+            $limits = [Limit::perMinute(120)->by($token)];
+
+            if ($request->filled('pin') && ! $request->filled('bypass')) {
+                $limits[] = Limit::perMinute(10)->by($token.'|'.$request->ip());
+            }
+
+            return $limits;
         });
 
         // Tighter, IP-aware limit for the PIN gate check: a legitimate operator

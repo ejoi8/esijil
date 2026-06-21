@@ -6,7 +6,7 @@
         'description' => $guide['description'],
         'inLanguage' => 'ms-MY',
         'dateModified' => $guide['updated'],
-        'mainEntityOfPage' => url()->current(),
+        'mainEntityOfPage' => route('guides.show', $guide['slug']),
         'publisher' => ['@type' => 'Organization', 'name' => config('app.name')],
     ];
 @endphp
@@ -27,5 +27,5 @@
         </div>
     </div>
 
-    <script type="application/ld+json">{!! json_encode($jsonLd, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    <x-json-ld :data="$jsonLd" />
 </x-layouts.mono>

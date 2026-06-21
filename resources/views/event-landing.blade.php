@@ -3,6 +3,7 @@
     use Illuminate\Support\Str;
 
     $registerOpen = $event->registration_open && $event->hasModule(EventModule::Registration);
+    $canonical = route('events.landing', $event->slug);
 
     $jsonLd = array_filter([
         '@context' => 'https://schema.org',
@@ -13,7 +14,7 @@
         'endDate' => $event->ends_at?->toIso8601String(),
         'eventAttendanceMode' => 'https://schema.org/OfflineEventAttendanceMode',
         'eventStatus' => 'https://schema.org/EventScheduled',
-        'url' => url()->current(),
+        'url' => $canonical,
         'location' => $event->venue ? ['@type' => 'Place', 'name' => $event->venue] : null,
         'organizer' => $event->organizer_name ? ['@type' => 'Organization', 'name' => $event->organizer_name] : null,
     ], fn ($value) => $value !== null);
@@ -25,6 +26,7 @@
 <x-layouts.mono
     :title="$event->title"
     :description="$metaDescription"
+    :canonical="$canonical"
 >
     <div class="col">
         <p class="kicker">Pendaftaran Program</p>
@@ -72,5 +74,5 @@
         </div>
     </div>
 
-    <script type="application/ld+json">{!! json_encode($jsonLd, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    <x-json-ld :data="$jsonLd" />
 </x-layouts.mono>

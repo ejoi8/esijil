@@ -10,6 +10,7 @@ use App\Enums\ScanMatchMode;
 use App\Models\Concerns\BelongsToOrganization;
 use Database\Factories\EventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -95,8 +96,19 @@ class Event extends Model
     protected static function generateSlug(?string $title, string $publicId): string
     {
         $base = Str::slug((string) $title) ?: 'acara';
+        $candidate = $base.'-'.Str::lower(Str::substr($publicId, 0, 8));
 
-        return $base.'-'.Str::lower(Str::substr($publicId, 0, 8));
+        while (static::query()->where('slug', $candidate)->exists()) {
+            $candidate = $base.'-'.Str::lower(Str::random(8));
+        }
+
+        return $candidate;
+    }
+
+    /** Publicly visible events: published and opted into listing. */
+    public function scopePubliclyListed(Builder $query): void
+    {
+        $query->where('status', EventStatus::Published->value)->where('listed', true);
     }
 
     public function creator(): BelongsTo

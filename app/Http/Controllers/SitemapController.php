@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\EventStatus;
 use App\Models\Event;
 use App\Models\Organization;
 use App\Support\Guides;
@@ -40,10 +39,10 @@ class SitemapController extends Controller
         ];
 
         Event::query()
-            ->where('status', EventStatus::Published->value)
-            ->where('listed', true)
+            ->publiclyListed()
             ->whereNotNull('slug')
             ->orderByDesc('updated_at')
+            ->limit(45000)
             ->get(['slug', 'updated_at'])
             ->each(function (Event $event) use (&$urls): void {
                 $urls[] = [
@@ -54,10 +53,9 @@ class SitemapController extends Controller
 
         // Issuer profiles for organizations with at least one public event.
         Organization::query()
-            ->whereHas('events', fn ($query) => $query
-                ->where('status', EventStatus::Published->value)
-                ->where('listed', true))
+            ->whereHas('events', fn ($query) => $query->publiclyListed())
             ->orderBy('name')
+            ->limit(45000)
             ->get(['slug'])
             ->each(function (Organization $organization) use (&$urls): void {
                 $urls[] = ['loc' => route('organizations.landing', $organization->slug), 'lastmod' => null];

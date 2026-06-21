@@ -1,11 +1,13 @@
 @php
     use Illuminate\Support\Str;
 
+    $canonical = route('organizations.landing', $organization);
+
     $jsonLd = [
         '@context' => 'https://schema.org',
         '@type' => 'Organization',
         'name' => $organization->name,
-        'url' => url()->current(),
+        'url' => $canonical,
     ];
 
     $metaDescription = Str::limit('Program & acara anjuran '.$organization->name.' yang dibuka untuk pendaftaran awam.', 160);
@@ -14,6 +16,7 @@
 <x-layouts.mono
     :title="$organization->name"
     :description="$metaDescription"
+    :canonical="$canonical"
 >
     <div class="col">
         <p class="kicker">Penganjur</p>
@@ -35,5 +38,5 @@
         </div>
     </div>
 
-    <script type="application/ld+json">{!! json_encode($jsonLd, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    <x-json-ld :data="$jsonLd" />
 </x-layouts.mono>

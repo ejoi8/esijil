@@ -1,5 +1,6 @@
 @php
     $isSearch = $q !== '';
+    $canonical = $isSearch ? false : ($events->currentPage() > 1 ? $events->url($events->currentPage()) : route('events.index'));
     $itemList = [
         '@context' => 'https://schema.org',
         '@type' => 'ItemList',
@@ -15,7 +16,7 @@
 <x-layouts.mono
     :title="'Senarai Acara'"
     :description="'Senarai acara dan program yang dibuka untuk pendaftaran awam — cari dan daftar acara anda.'"
-    :canonical="route('events.index')"
+    :canonical="$canonical"
     :robots="$isSearch ? 'noindex,follow' : 'index,follow'"
 >
     <style>
@@ -79,5 +80,5 @@
         @endif
     </div>
 
-    <script type="application/ld+json">{!! json_encode($itemList, JSON_HEX_TAG | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    <x-json-ld :data="$itemList" />
 </x-layouts.mono>

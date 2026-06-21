@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\EventStatus;
 use App\Models\Organization;
 use Illuminate\Contracts\View\View;
 
@@ -17,8 +16,7 @@ class OrganizationLandingController extends Controller
     public function show(Organization $organization): View
     {
         $events = $organization->events()
-            ->where('status', EventStatus::Published->value)
-            ->where('listed', true)
+            ->publiclyListed()
             ->orderByDesc('starts_at')
             ->get();
 
