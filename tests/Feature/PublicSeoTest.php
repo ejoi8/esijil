@@ -100,3 +100,38 @@ it('includes guides in the sitemap', function () {
     $slug = array_key_first(Guides::all());
     $this->get('/sitemap.xml')->assertOk()->assertSee($slug, false);
 });
+
+it('lists opt-in published events on the public directory and excludes the rest', function () {
+    Event::factory()->create(['status' => EventStatus::Published, 'listed' => true, 'title' => 'Seminar Awam Terbuka']);
+    Event::factory()->create(['status' => EventStatus::Published, 'listed' => false, 'title' => 'Mesyuarat Tertutup']);
+    Event::factory()->create(['status' => EventStatus::Draft, 'listed' => true, 'title' => 'Draf Acara Belum Terbit']);
+
+    $this->get(route('events.index'))
+        ->assertOk()
+        ->assertSee('Seminar Awam Terbuka')
+        ->assertDontSee('Mesyuarat Tertutup')
+        ->assertDontSee('Draf Acara Belum Terbit')
+        ->assertSee('"@type":"ItemList"', false);
+});
+
+it('filters the event directory by search query', function () {
+    Event::factory()->create(['status' => EventStatus::Published, 'listed' => true, 'title' => 'Bengkel Fotografi']);
+    Event::factory()->create(['status' => EventStatus::Published, 'listed' => true, 'title' => 'Kursus Memasak']);
+
+    $this->get(route('events.index', ['q' => 'Fotografi']))
+        ->assertOk()
+        ->assertSee('Bengkel Fotografi')
+        ->assertDontSee('Kursus Memasak');
+});
+
+it('paginates the event directory', function () {
+    Event::factory()->count(13)->create(['status' => EventStatus::Published, 'listed' => true]);
+
+    $this->get(route('events.index'))
+        ->assertOk()
+        ->assertSee('Seterusnya');
+});
+
+it('includes the event directory in the sitemap', function () {
+    $this->get('/sitemap.xml')->assertOk()->assertSee(route('events.index', [], false), false);
+});

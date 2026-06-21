@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminRegistrationCertificateDownloadController;
 use App\Http\Controllers\CertificateLookupController;
 use App\Http\Controllers\CustomFieldFileController;
+use App\Http\Controllers\EventDirectoryController;
 use App\Http\Controllers\EventLandingController;
 use App\Http\Controllers\EventQrSheetController;
 use App\Http\Controllers\EventRegistrationController;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('home');
 Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
 Route::get('/sitemap.xml', [SitemapController::class, 'sitemap'])->name('sitemap');
+Route::get('/acara', [EventDirectoryController::class, 'index'])->name('events.index');
 Route::get('/e/{event:slug}', [EventLandingController::class, 'show'])->name('events.landing');
 Route::get('/o/{organization}', [OrganizationLandingController::class, 'show'])->name('organizations.landing');
 Route::get('/panduan', [GuideController::class, 'index'])->name('guides.index');

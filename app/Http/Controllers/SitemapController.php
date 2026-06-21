@@ -35,6 +35,7 @@ class SitemapController extends Controller
     {
         $urls = [
             ['loc' => url('/'), 'lastmod' => null],
+            ['loc' => route('events.index'), 'lastmod' => null],
             ['loc' => route('certificate-lookup.index'), 'lastmod' => null],
         ];
 

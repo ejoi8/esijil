@@ -133,6 +133,7 @@
                     <a href="#cara">Cara guna</a>
                     <a href="#sijil">Contoh sijil</a>
                     <a href="#soalan">Soalan lazim</a>
+                    <a href="{{ route('events.index') }}">Acara</a>
                     <a href="{{ route('guides.index') }}">Panduan</a>
                 </div>
                 <div class="nav-cta">
@@ -320,6 +321,7 @@
                 {{ config('app.name') }}
             </a>
             <div class="foot-links">
+                <a href="{{ route('events.index') }}">Acara</a>
                 <a href="{{ route('guides.index') }}">Panduan</a>
                 <a href="{{ route('certificate-lookup.index') }}">Semak Sijil</a>
                 <a href="{{ url('/auth') }}">Log Masuk</a>
