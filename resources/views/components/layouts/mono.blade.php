@@ -1,11 +1,11 @@
 @props([
     'title' => config('app.name'),
-    'description' => 'Pendaftaran program PUSPANITA melalui pautan jemputan yang dikongsi kepada peserta.',
+    'description' => config('app.name').' — sistem pendaftaran acara, kehadiran QR dan sijil digital.',
     'canonical' => null,
     'robots' => 'index,follow',
     'ogType' => 'website',
     'ogImage' => '/images/og/esijil-share.svg',
-    'ogImageAlt' => 'eSIJIL PUSPANITA',
+    'ogImageAlt' => config('app.name'),
 ])
 
 @php
@@ -97,7 +97,7 @@
                 <div class="wrap">
                     <a class="brand" href="{{ route('home') }}">
                         <x-brand-mark />
-                        eSIJIL
+                        {{ config('app.name') }}
                     </a>
                     <a class="linkarrow" href="{{ route('certificate-lookup.index') }}">
                         Semakan Sijil
@@ -114,7 +114,7 @@
 
             <footer class="site-foot">
                 <div class="wrap">
-                    <p>ICT PUSPANITA &copy; 2026</p>
+                    <p>{{ config('app.name') }} &copy; {{ date('Y') }}</p>
                 </div>
             </footer>
         </div>

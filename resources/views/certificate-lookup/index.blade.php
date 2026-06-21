@@ -1,12 +1,12 @@
 <x-layouts.mono
     :title="'Semakan Sijil'"
-    :description="'Semak sijil program PUSPANITA menggunakan emel dan muat turun sijil digital yang tersedia secara terus.'"
+    :description="'Semak dan sahkan sijil digital anda menggunakan emel, kemudian muat turun terus.'"
     :canonical="route('certificate-lookup.index')"
 >
     <div class="col">
         <p class="kicker">Semakan Sijil</p>
         <h1>Semakan dan Muat Turun Sijil</h1>
-        <p class="lead">Masukkan emel anda untuk semak dan muat turun sijil program PUSPANITA yang tersedia.</p>
+        <p class="lead">Masukkan emel anda untuk semak dan muat turun sijil anda yang tersedia.</p>
 
         <div class="stack">
             <section class="card" aria-label="Carian sijil">
