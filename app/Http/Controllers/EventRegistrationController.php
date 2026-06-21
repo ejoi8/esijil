@@ -43,19 +43,21 @@ class EventRegistrationController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'event' => 'Registration is not open for this event.',
+                    'event' => 'Pendaftaran tidak dibuka untuk program ini.',
                 ]);
         }
 
         $result = DB::transaction(function () use ($request, $event, $certificateIssuer): ?array {
+            $existing = $this->findExistingParticipant($request, $event);
+
             // Seat capacity (stock control): a new registration consumes a seat.
             // The check locks the event row to serialize concurrent sign-ups and
-            // never blocks a returning participant who already holds a seat.
-            if ($event->capacity !== null && $this->eventIsFullForNewSignup($request, $event)) {
+            // never blocks a returning participant who already holds an active seat.
+            if ($event->capacity !== null && $this->newSignupWouldExceedCapacity($event, $existing)) {
                 return null;
             }
 
-            $participant = $this->resolveParticipant($request, $event);
+            $participant = $this->resolveParticipant($request, $event, $existing);
             $registration = $this->resolveRegistration($request, $event, $participant);
 
             $certificateIssuer->issueFor($registration);
@@ -115,25 +117,21 @@ class EventRegistrationController extends Controller
     /**
      * Within the registration transaction: lock the event row to serialize
      * concurrent sign-ups, then report whether a NEW registration would exceed
-     * the seat capacity. A returning participant (who already holds a seat) is
-     * never considered full. Only called when the event has a capacity set.
+     * the seat capacity. A participant who already holds an ACTIVE seat is never
+     * blocked (and consumes no new seat); a participant whose only prior
+     * registration is soft-deleted IS subject to the cap, since restoring it
+     * consumes a fresh seat. Only called when the event has a capacity set.
      */
-    protected function eventIsFullForNewSignup(StoreEventRegistrationRequest $request, Event $event): bool
+    protected function newSignupWouldExceedCapacity(Event $event, ?Participant $participant): bool
     {
         Event::whereKey($event->getKey())->lockForUpdate()->first();
 
-        $participant = Participant::withTrashed()
-            ->where('organization_id', $event->organization_id)
-            ->where('email', (string) $request->input('email'))
-            ->first();
-
-        $alreadyRegistered = $participant !== null && Registration::withTrashed()
+        $holdsActiveSeat = $participant !== null && Registration::query()
             ->where('event_id', $event->id)
             ->where('participant_id', $participant->id)
             ->exists();
 
-        return ! $alreadyRegistered
-            && Registration::where('event_id', $event->id)->count() >= $event->capacity;
+        return ! $holdsActiveSeat && $event->seatsTaken() >= $event->capacity;
     }
 
     protected function abortUnlessAuthorizedRegistrationSession(Registration $registration): void
@@ -141,14 +139,17 @@ class EventRegistrationController extends Controller
         abort_unless(session('event_registration_success_id') === $registration->id, 403);
     }
 
-    protected function resolveParticipant(StoreEventRegistrationRequest $request, Event $event): Participant
+    /** Returning participants are matched by email within the organization. */
+    protected function findExistingParticipant(StoreEventRegistrationRequest $request, Event $event): ?Participant
     {
-        // Returning participants are matched by email within the organization.
-        $participant = Participant::withTrashed()
+        return Participant::withTrashed()
             ->where('organization_id', $event->organization_id)
             ->where('email', (string) $request->input('email'))
             ->first();
+    }
 
+    protected function resolveParticipant(StoreEventRegistrationRequest $request, Event $event, ?Participant $participant): Participant
+    {
         if ($participant !== null && $participant->trashed()) {
             $participant->restore();
         }

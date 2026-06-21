@@ -2,9 +2,11 @@
 
 use App\Enums\ScanMatchMode;
 use App\Models\Event;
+use App\Models\Organization;
 use App\Models\Participant;
 use App\Models\Registration;
 use App\Models\ScannerStation;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -136,4 +138,38 @@ it('verifies the station PIN at the gate before the scanner opens', function () 
     $open = scanStation();
     $this->postJson(route('api.scan.verify'), ['station_token' => $open->token])
         ->assertOk()->assertJson(['ok' => true]);
+
+    // An unknown station token is rejected before the camera opens.
+    $this->postJson(route('api.scan.verify'), ['station_token' => 'not-a-real-token', 'pin' => '4823'])
+        ->assertStatus(401)->assertJson(['ok' => false]);
+});
+
+it('embeds the PIN for a logged-in org member but not for guests or outsiders', function () {
+    // Own organization + event so membership is unambiguous (the harness auto-joins
+    // factory users to a default org, which would otherwise muddy "non-member").
+    $org = Organization::factory()->create();
+    $event = Event::factory()->create(['organization_id' => $org->id, 'modules' => ['attendance']]);
+    $station = ScannerStation::factory()->for($event)->create(['pin' => '4823']);
+
+    // Guest: PIN required, PIN not embedded / not in the markup.
+    $this->get(route('scan.show', $station->token))
+        ->assertOk()
+        ->assertViewHas('pinRequired', true)
+        ->assertViewHas('embeddedPin', null)
+        ->assertDontSee('4823');
+
+    // Member of the event's organization: PIN embedded, no prompt.
+    $member = User::factory()->create();
+    $member->organizations()->syncWithoutDetaching([$org->id]);
+    $this->actingAs($member)->get(route('scan.show', $station->token))
+        ->assertOk()
+        ->assertViewHas('pinRequired', false)
+        ->assertViewHas('embeddedPin', '4823');
+
+    // Logged-in user who is NOT in the event's organization is treated like a guest.
+    $outsider = User::factory()->create();
+    $this->actingAs($outsider)->get(route('scan.show', $station->token))
+        ->assertViewHas('pinRequired', true)
+        ->assertViewHas('embeddedPin', null)
+        ->assertDontSee('4823');
 });

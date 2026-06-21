@@ -367,3 +367,82 @@ it('shows the full state and hides the form when capacity is reached', function 
         ->assertSee('Pendaftaran penuh')
         ->assertDontSee('Hantar Pendaftaran');
 });
+
+it('frees a seat when a registration is soft-deleted', function () {
+    Notification::fake();
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'registration_open' => true,
+        'capacity' => 1,
+    ]);
+    $reg = Registration::factory()->for($event)->for(Participant::factory())->create();
+    expect($event->fresh()->isFull())->toBeTrue();
+
+    $reg->delete(); // soft-deleting (cancelling) frees the seat
+    expect($event->fresh()->isFull())->toBeFalse();
+
+    $this->post($event->publicRegistrationUrl(), [
+        'full_name' => 'New Seat',
+        'email' => 'newseat@example.test',
+        'participant_details' => ['membership_status' => 'member'],
+    ])->assertRedirect()->assertSessionHas('registration_created');
+
+    expect($event->registrations()->count())->toBe(1);
+});
+
+it('does not let restoring a soft-deleted registration exceed capacity', function () {
+    Notification::fake();
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'registration_open' => true,
+        'capacity' => 1,
+    ]);
+    // Participant A registered, then their registration was soft-deleted (seat freed).
+    $a = Participant::factory()->create(['email' => 'a@example.test']);
+    Registration::factory()->for($event)->for($a)->create()->delete();
+    // Participant B then takes the only seat (1/1, full).
+    Registration::factory()->for($event)->for(Participant::factory())->create();
+    expect($event->fresh()->isFull())->toBeTrue();
+
+    // A re-submits — must be blocked; restoring A would overrun the cap.
+    $this->post($event->publicRegistrationUrl(), [
+        'full_name' => 'A Again',
+        'email' => 'a@example.test',
+        'participant_details' => ['membership_status' => 'member'],
+    ])->assertSessionHasErrors('event');
+
+    expect($event->registrations()->count())->toBe(1);
+});
+
+it('does not cap registrations created outside the public form', function () {
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'registration_open' => true,
+        'capacity' => 1,
+    ]);
+    Registration::factory()->for($event)->for(Participant::factory())->create();
+    expect($event->isFull())->toBeTrue();
+
+    // Direct (admin / import) creation bypasses the public capacity gate.
+    Registration::factory()->for($event)->for(Participant::factory())->create();
+
+    expect($event->registrations()->count())->toBe(2);
+});
+
+it('treats capacity 0 as always full', function () {
+    Notification::fake();
+    $event = Event::factory()->create([
+        'status' => EventStatus::Published,
+        'registration_open' => true,
+        'capacity' => 0,
+    ]);
+
+    expect($event->isFull())->toBeTrue()
+        ->and($event->seatsRemaining())->toBe(0);
+
+    $this->post($event->publicRegistrationUrl(), [
+        'full_name' => 'Nobody',
+        'email' => 'nobody@example.test',
+        'participant_details' => ['membership_status' => 'member'],
+    ])->assertSessionHasErrors('event');
+});

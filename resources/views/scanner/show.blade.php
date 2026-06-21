@@ -91,6 +91,7 @@
         let mode = localStorage.getItem('esijil_scan_mode') === 'auto' ? 'auto' : 'review';
         let busy = false;     // a request is in flight
         let paused = false;   // a review card is showing — ignore new scans
+        let gateOpen = false; // the PIN gate is showing — ignore new scans
         let scanner = null;
 
         function renderMode() {
@@ -135,6 +136,7 @@
 
         // ---- PIN gate ----
         function showGate(error) {
+            gateOpen = true;
             try { scanner && scanner.pause(true); } catch (e) {}
             reader.style.display = 'none';
             panel.innerHTML = '';
@@ -145,6 +147,7 @@
             pinInput.focus();
         }
         function hideGate() {
+            gateOpen = false;
             gate.style.display = 'none';
             reader.style.display = '';
             renderMode();
@@ -161,6 +164,16 @@
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify({ station_token: STATION_TOKEN, pin: v }),
                 });
+                if (res.status === 429) {
+                    pinErr.textContent = 'Terlalu banyak cubaan — tunggu sebentar';
+                    pinErr.style.display = 'block';
+                    return;
+                }
+                if (!res.ok && res.status !== 401 && res.status !== 403) {
+                    pinErr.textContent = 'Ralat pelayan — cuba lagi';
+                    pinErr.style.display = 'block';
+                    return;
+                }
                 const data = await res.json();
                 if (!data.ok) {
                     pinErr.textContent = 'PIN salah — cuba lagi';
@@ -188,6 +201,7 @@
             pin = null;
             paused = false;
             busy = false;
+            pinErr.textContent = 'PIN stesen telah berubah — masukkan PIN baharu.';
             showGate(true);
         }
 
@@ -196,14 +210,12 @@
             const res = await fetch(SCAN_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({
-                    station_token: STATION_TOKEN,
-                    code: code,
-                    pin: pin,
-                    confirm: confirm,
-                    client_scan_id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
-                }),
+                body: JSON.stringify({ station_token: STATION_TOKEN, code: code, pin: pin, confirm: confirm }),
             });
+            // Distinguish throttling / server errors from the JSON {ok,status} the
+            // app returns (401/403 still carry a status we want to read).
+            if (res.status === 429) return { status: 'rate_limited' };
+            if (!res.ok && res.status !== 401 && res.status !== 403) return { status: 'http_error' };
             return res.json();
         }
 
@@ -246,6 +258,8 @@
             try {
                 const data = await post(code, true);
                 if (data.status === 'pin_invalid') { handlePinInvalid(); return; }
+                if (data.status === 'rate_limited') { showStatus('Terlalu banyak imbasan — cuba lagi', 'warn'); setTimeout(resume, 1500); return; }
+                if (data.status === 'http_error') { showStatus('Ralat pelayan — cuba lagi', 'err'); setTimeout(resume, 1500); return; }
                 panel.innerHTML = '';
                 const card = el('div', 'card');
                 card.appendChild(el('div', 'name', data.name || ''));
@@ -259,13 +273,14 @@
                 panel.appendChild(card);
             } catch (e) {
                 showStatus('Ralat rangkaian — cuba lagi', 'err');
+                setTimeout(resume, 1500);
             } finally {
                 busy = false;
             }
         }
 
         async function onScan(code) {
-            if (busy || paused) return;
+            if (busy || paused || gateOpen) return;
             busy = true;
 
             if (mode === 'auto') {
@@ -273,6 +288,8 @@
                 try {
                     const data = await post(code, true);
                     if (data.status === 'pin_invalid') { handlePinInvalid(); return; }
+                    if (data.status === 'rate_limited') { showStatus('Terlalu banyak imbasan — perlahankan sedikit', 'warn'); return; }
+                    if (data.status === 'http_error') { showStatus('Ralat pelayan — cuba lagi', 'err'); return; }
                     if (data.status === 'present') {
                         showStatus('✓ ' + data.name + ' — daftar masuk', 'ok');
                     } else if (data.status === 'already') {
@@ -295,6 +312,8 @@
             try {
                 const data = await post(code, false);
                 if (data.status === 'pin_invalid') { handlePinInvalid(); return; }
+                if (data.status === 'rate_limited') { showStatus('Terlalu banyak imbasan — perlahankan sedikit', 'warn'); setTimeout(resume, 1500); return; }
+                if (data.status === 'http_error') { showStatus('Ralat pelayan — cuba lagi', 'err'); setTimeout(resume, 1500); return; }
                 showCard(code, data);
             } catch (e) {
                 showStatus('Ralat rangkaian — cuba lagi', 'err');

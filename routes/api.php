@@ -8,7 +8,7 @@ Route::post('/scan', ScanController::class)
     ->middleware('throttle:scan')
     ->name('api.scan');
 
-// Up-front PIN check for the scanner gate (same per-station throttle).
+// Up-front PIN check for the scanner gate (tighter, IP-aware throttle to bound PIN guessing).
 Route::post('/scan/verify', [ScanController::class, 'verifyPin'])
-    ->middleware('throttle:scan')
+    ->middleware('throttle:scan-verify')
     ->name('api.scan.verify');

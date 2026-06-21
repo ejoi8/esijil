@@ -115,6 +115,12 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('scan', function (Request $request): Limit {
             return Limit::perMinute(120)->by((string) $request->input('station_token'));
         });
+
+        // Tighter, IP-aware limit for the PIN gate check: a legitimate operator
+        // verifies once, so this bounds brute-forcing of the (short) station PIN.
+        RateLimiter::for('scan-verify', function (Request $request): Limit {
+            return Limit::perMinute(10)->by((string) $request->input('station_token').'|'.$request->ip());
+        });
     }
 
     protected function configureMailSettings(): void

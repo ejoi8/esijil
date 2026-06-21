@@ -121,7 +121,7 @@ class Event extends Model
         return in_array($module->value, $this->modules ?? [], true);
     }
 
-    /** Active (non-cancelled) registrations — what a seat capacity counts. */
+    /** Active (non-soft-deleted) registrations — what a seat capacity counts. */
     public function seatsTaken(): int
     {
         return $this->registrations()->count();

@@ -39,7 +39,7 @@ class ScanController extends Controller
             return response()->json([
                 'ok' => false,
                 'status' => 'invalid',
-                'message' => 'Invalid or expired scanner station.',
+                'message' => 'Stesen pengimbas tidak sah atau telah tamat tempoh.',
             ], 401);
         }
 
@@ -73,7 +73,7 @@ class ScanController extends Controller
             return response()->json([
                 'ok' => false,
                 'status' => 'invalid',
-                'message' => 'Code not found for this event.',
+                'message' => 'Kod tidak ditemui untuk program ini.',
             ]);
         }
 

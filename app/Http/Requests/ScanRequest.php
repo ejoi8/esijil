@@ -27,8 +27,6 @@ class ScanRequest extends FormRequest
             'pin' => ['nullable', 'string', 'max:20'],
             // false = identify only (no write); true/absent = record the check-in.
             'confirm' => ['sometimes', 'boolean'],
-            'client_scan_id' => ['nullable', 'uuid'],
-            'scanned_at' => ['nullable', 'date'],
         ];
     }
 }
